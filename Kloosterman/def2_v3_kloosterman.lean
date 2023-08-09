@@ -1,4 +1,4 @@
-import Mathlib
+import Mathlib.Tactic
 
 #check RatFunc
 
@@ -61,7 +61,7 @@ lemma ZMod.val_add_val (x y : ZMod q) [NeZero q] : x.val + y.val = (x+y).val ∨
     simp
   done
 
-lemma eZMod_add (x y : ZMod q)  : eZMod q (x + y) = eZMod q x * eZMod q y := by
+lemma eZMod_add (x y : ZMod q) : eZMod q (x + y) = eZMod q x * eZMod q y := by
   simp only [eZMod_def]
   rw [← Complex.exp_add]
   rw [exp_eq_exp_iff_exists_int]
@@ -148,7 +148,7 @@ lemma congr_IntToUnitZMod {q : ℕ} (a : ℤ) (haq : ((a : ZMod q).val).gcd q = 
   have toNatural := congr_IntToNat a haq
   rcases toNatural with ⟨a₁, a₁_coprime_q, congr_a₁⟩
   use ZMod.unitOfCoprime a₁ a₁_coprime_q
-  simp
+  simp only [ZMod.coe_unitOfCoprime]
   rw [← ZMod.int_cast_eq_int_cast_iff] at *
   simp at *
   assumption
@@ -167,24 +167,25 @@ theorem metamorphosis {q : ℕ} (a : ℤ) (b : ℤ) (haq : ((a : ZMod q).val).gc
   simp only [kloostermanSum]
   apply Finset.sum_bij (fun i _ ↦ a'*i)
   · intro _ _
-    simp
+    simp only [Finset.mem_univ]
   · intro c _
     norm_num
-    ring
-    simp [mul_comm] -- `rw [mul_comm]` doesn't work somehow
-    simp [mul_assoc]
+    rw [← mul_assoc]
+    simp [mul_comm, mul_assoc] -- `rw [mul_comm]` doesn't work somehow
   · intro a₁ a₂ _ _ ha
-    simp at ha
+    simp only [mul_right_inj] at ha 
     exact ha
   · intro c _
-    have ha'c : a'⁻¹ * c ∈ Finset.univ := by simp
+    have ha'c : a'⁻¹ * c ∈ Finset.univ := by simp only [Finset.mem_univ]
     use (a'⁻¹*c)
     use ha'c
-    simp
+    simp only [mul_inv_cancel_left]
   · rfl
   · exact Int.ModEq.mul congr_a congr_b
   · assumption
   · assumption
+
+end elementary
 /- 
  -- K(ac, b; m) = K(a, bc; m) if gcd(c, m) = 1
 lemma lemma3_2 (a : ℤ) (b : ℤ) (q : ℕ) (gcd_cq : c.gcd q = 1) : kloostermanSum (a*c) b q = kloostermanSum a (b*c) q  := by
@@ -193,21 +194,13 @@ lemma lemma3_2 (a : ℤ) (b : ℤ) (q : ℕ) (gcd_cq : c.gcd q = 1) : kloosterma
   -- sends x to (c⁻¹*x⁻¹) in the sum
   sorry
 
-
 -- Kloosterman sum is multiplicative
 theorem theorem1 (a : ℤ) (b : ℤ) (q : ℕ) (b₁ : ℤ) (b₂ : ℤ) (q₁ : ℕ) (q₂ : ℕ) (hb : b = b₁*q₂^2 + b₂*q₁^2) (hq : q = q₁ * q₂) (gcd_q : q₁.gcd q₂ = 1): kloostermanSum a b m = (kloostermanSum a b m₁) * (kloostermanSum a b m₂) := by 
-  
-  
   sorry
 
 -/
-end elementary
 
 -- proper Iwaniec and Kowalski proof starts from here
-
-
-
-
 
 /- Questions to Kevin
 1. Whenever I change the name for the theorems, is it possible to make a corresponding change in the remaining bits of the code?

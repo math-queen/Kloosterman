@@ -39,8 +39,7 @@ lemma foo (p : ℕ) (α : ℕ) (z₁ z₂ : ZMod (p^α : ℕ)) :
   rw [← ZMod.int_cast_cast (z₁ + z₂)]
   rw [ZMod.coe_add_eq_ite]
   split
-  · simp? [-CharP.cast_eq_zero, mul_sub, mul_add, ZMod.int_cast_cast]
-    
+  · simp [mul_sub, mul_add]
     rw [← pow_add, ← two_mul]
     norm_cast
     rw [ZMod.nat_cast_self]

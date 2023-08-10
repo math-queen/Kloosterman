@@ -12,7 +12,7 @@ open Complex Polynomial Int BigOperators Set
 
 noncomputable section
 
-/- Note
+/- # Note
 We have to keep the variables `x` `y` as `ℤ` for the following theorems w.r.t taylor series
 When dealing with Kloosterman sum, I think we have to coerce the variables from ZMod q to ℤ 
 when using the theorems for the taylor series and Kloosterman sum at the same time 
@@ -413,7 +413,7 @@ lemma rationalFunc_eq_ZMod (p₁ p₀ : Polynomial ℤ) (x y : ℤ) (h : x = y +
 
 lemma congr_IsUnit (q : ℕ) (a b : ZMod q) (hCongr : a ≡ b [ZMOD q]) (IsUnitFora : IsUnit a): IsUnit b := by
   rw [← ZMod.int_cast_eq_int_cast_iff] at hCongr
-  simp at hCongr -- try out simp?
+  simp only [ZMod.int_cast_cast, ZMod.cast_id', id_eq] at hCongr  -- try out simp?
   rw [← hCongr]
   exact IsUnitFora
 
@@ -552,7 +552,7 @@ lemma rationalFunc_eq_ZMod (p₁ p₀ : Polynomial ℤ) (x y : ℤ) (H₁ : (tay
   repeat rw [cast_add]
   rw [cast_mul]
   rw [add_mul]
-  repeat rw [mul_add]
+  simp only [mul_add]
   /- process of cancelling out `↑(eval y p₀)` with its inverse -/
   -- gets rid of the inverses in the first term of the rhs
   rw [mul_assoc]
@@ -969,6 +969,177 @@ theorem even_pow_final_formula (x y x₀ : ℤ) (h : x = y + z * (p^α : ℕ)) :
   sorry
 -/
 
+
+
+
+/- # Final sentences of lemma 12.2: The Challenge -/
+
+lemma aargh (a b : ℕ) (h : b ≤ a) [NeZero b] (n : ZMod b) : ((n : ZMod a) : ZMod b) = n := by
+  have : 0 < b := by exact Fin.size_positive' -- changed this bit from Kevin's code
+  have : NeZero a := ⟨by linarith⟩
+  rw [← ZMod.nat_cast_comp_val]
+  rw [← ZMod.nat_cast_comp_val]
+  dsimp
+  rw [ZMod.val_cast_of_lt]
+  · exact ZMod.nat_cast_zmod_val n
+  · apply lt_of_lt_of_le ?_ h
+    exact ZMod.val_lt n
+
+lemma dvd_pow_two : p^α ∣ p^(2*α) := ⟨p^α, by ring⟩
+
+def aux_fun (x : ZMod (p^(2*α))) : ZMod (p^α) := x.val / p^α
+
+def val_mod (n : ℕ) [NeZero n] (x : ZMod n) : (x.val : ZMod n) = x := by
+  exact ZMod.nat_cast_zmod_val x
+
+/- previous version
+example (hα : 0 < α) : (ZMod (p^(2*α)))ˣ ≃ (ZMod (p^α))ˣ × ZMod (p^α) where
+  toFun x := ⟨Units.map (ZMod.castHom dvd_pow_two _).toMonoidHom x, aux_fun x⟩
+  invFun yz := ZMod.unitOfCoprime (yz.1.val.val + p^α * yz.2.val) <| by
+    rw [← Nat.prime_iff] at hp
+    cases' yz with y z; dsimp
+    apply Nat.Prime.coprime_pow_of_not_dvd hp
+    intro hp'
+    rw [Nat.dvd_add_left] at hp'
+    · have := ZMod.val_coe_unit_coprime y
+      rw [Nat.Prime.dvd_iff_not_coprime (by assumption)] at hp'
+      apply hp'
+      apply Nat.coprime.coprime_dvd_left _ this.symm
+      exact dvd_pow (dvd_refl p) hα.ne'
+    · apply dvd_mul_of_dvd_left
+      exact dvd_pow (dvd_refl p) hα.ne'
+  left_inv := by
+    intro x
+    ext
+    simp only [RingHom.toMonoidHom_eq_coe, Units.coe_map, MonoidHom.coe_coe, ZMod.castHom_apply, ZMod.coe_unitOfCoprime,
+      Nat.cast_add, Nat.cast_mul, Nat.cast_pow, aux_fun]
+    sorry -- eew
+  right_inv := by
+    rw [← Nat.prime_iff] at hp
+    rintro ⟨y, z⟩
+    have : NeZero (p^α : ℕ) := ⟨pow_ne_zero α <| Nat.Prime.ne_zero hp⟩
+    ext <;> simp
+    · convert zero_mul z -- changed this bit from Kevin's code
+      norm_cast
+      exact ZMod.nat_cast_self (p ^ α)
+    · simp only [aux_fun]
+      rw [ZMod.val_add]
+      rw [Nat.mod_eq_of_lt]
+      · rw [ZMod.val_mul]
+        rw [Nat.mod_eq_of_lt]
+        · norm_cast
+          rw [ZMod.val_cast_of_lt, Nat.add_mul_div_left]
+          · simp only [Nat.cast_add, ZMod.nat_cast_val]
+            rw [Nat.div_eq_zero]
+            · norm_cast
+              rw [aargh]; simp
+              apply pow_le_pow
+              linarith [Nat.Prime.pos hp]
+              linarith
+            · sorry
+          · sorry
+          · sorry
+        · sorry
+      · sorry
+-/
+
+def UnitEquivUnitProdZMod (hα : 0 < α) : (ZMod (p^(2*α)))ˣ ≃ (ZMod (p^α))ˣ × ZMod (p^α) where
+  toFun x := ⟨Units.map (ZMod.castHom dvd_pow_two _).toMonoidHom x, aux_fun x⟩
+  invFun yz := ZMod.unitOfCoprime (yz.1.val.val + yz.2.val * p^α) <| by
+    rw [← Nat.prime_iff] at hp
+    cases' yz with y z; dsimp
+    apply Nat.Prime.coprime_pow_of_not_dvd hp
+    intro hp'
+    rw [Nat.dvd_add_left] at hp'
+    · have := ZMod.val_coe_unit_coprime y
+      rw [Nat.Prime.dvd_iff_not_coprime (by assumption)] at hp'
+      apply hp'
+      apply Nat.coprime.coprime_dvd_left _ this.symm
+      exact dvd_pow (dvd_refl p) hα.ne'
+    · apply dvd_mul_of_dvd_right
+      exact dvd_pow (dvd_refl p) hα.ne'
+  left_inv := by
+    intro x
+    ext
+    simp only [RingHom.toMonoidHom_eq_coe, Units.coe_map, MonoidHom.coe_coe, ZMod.castHom_apply, ZMod.coe_unitOfCoprime,
+      Nat.cast_add, Nat.cast_mul, Nat.cast_pow, aux_fun]
+    sorry -- eew
+  right_inv := by
+    rw [← Nat.prime_iff] at hp
+    rintro ⟨y, z⟩
+    have : NeZero (p^α : ℕ) := ⟨pow_ne_zero α <| Nat.Prime.ne_zero hp⟩
+    ext <;> simp
+    · convert mul_zero z -- changed this bit from Kevin's code
+      norm_cast
+      exact ZMod.nat_cast_self (p ^ α)
+    · simp only [aux_fun]
+      rw [ZMod.val_add]
+      rw [Nat.mod_eq_of_lt]
+      · rw [ZMod.val_mul]
+        rw [Nat.mod_eq_of_lt]
+        · norm_cast
+          rw [ZMod.val_cast_of_lt, Nat.add_mul_div_right]
+          · simp only [Nat.cast_add, ZMod.nat_cast_val]
+            rw [Nat.div_eq_zero]
+            · norm_cast
+              rw [aargh]; simp
+              apply pow_le_pow
+              linarith [Nat.Prime.pos hp]
+              linarith
+            · sorry
+          · sorry
+          · sorry
+        · sorry
+      · sorry
+
+-- figured out the proof by referencing the def `castHom` and its corresponding theorems from the doc `mathlib4/Mathlib/Data/ZMod/Basic.lean`
+/- I think `Finset.sum_bij'` follows the structure of the isomorphism `UnitEquivUnitProdZMod` -/
+theorem sum_bijection (f : ZMod (p^(2*α)) → ℂ) (g : ℤ → ZMod (p^(2*α))) [NeZero (p^α : ℕ)] (hα : 0 < α) :
+    ∑ x : (ZMod (p^(2*α)))ˣ, f (g x) = ∑ yz : (ZMod (p^α))ˣ × ZMod (p^α), f (g (yz.1 + yz.2 * (p^α : ℕ))) := by
+  apply Finset.sum_bij' (fun i _ => (UnitEquivUnitProdZMod hp hα).toFun i) (j := fun j _ => (UnitEquivUnitProdZMod hp hα).invFun j) -- map `i` is toFun and map `j` must be invFun
+  · intro a ha
+    exact Finset.mem_univ ((fun i x => Equiv.toFun (UnitEquivUnitProdZMod hp hα) i) a ha)
+    -- (i := UnitEquivUnitProdZMod.toFun i) (j := UnitEquivUnitProdZMod.invFun j)
+    -- refine fun a ha => ?_ a ha
+  · intro a ha
+    
+    sorry
+  · exact fun a ha => Finset.mem_univ (Equiv.invFun (UnitEquivUnitProdZMod hp hα) a)
+  · intro a _
+    exact (UnitEquivUnitProdZMod hp hα).left_inv a
+  · intro a _
+    exact (UnitEquivUnitProdZMod hp hα).right_inv a -- it worked!
+  
+  
+  
+
+theorem Sum_into_two_sums (f : ZMod (p^(2*α)) → ℂ) (g : ℤ → ZMod (p^(2*α))) [NeZero (p^α : ℕ)] :
+    ∑ x : (ZMod (p^(2*α)))ˣ, f (g x) = ∑ y : (ZMod (p^α))ˣ, ∑ z : (ZMod (p^α : ℕ)), f (g (y + z * (p^α : ℕ))) := by
+  apply Finset.sum_bij
+  
+  sorry
+
+theorem CharSum_in_two_sums (a b x y : ℤ) (h : x = y + z * (p^α : ℕ)) [NeZero (p^α : ℕ)] :
+    CharSum χ ψ f₁ f₀ g₁ g₀ (p^(2*α)) = ∑ y₀ : (ZMod (p^α))ˣ, (χ (rationalFunc f₁ f₀ y₀ (p^α)) * ψ (rationalFunc g₁ g₀ y₀ (p^α))) * (∑ z₀ : (ZMod (p^α : ℕ)), eZMod (p^α) ((hFunc z χ ψ f₁ f₀ g₁ g₀ x y y₀ (p^α) hp) * z₀)) := by
+  rw [CharSum]
+  sorry
+
+
+/- 
+def CharSum (q : ℕ) : ℂ :=
+  ∑ x : (ZMod q)ˣ, χ (rationalFunc f₁ f₀ x q) * ψ (rationalFunc g₁ g₀ x q)
+-/
+
+
+
+
+
+
+
+
+
+/- old codes -/
+
 def ZModIsUnit (q : ℕ): ℕ → Prop :=
   fun r => IsUnit (r : ZMod q)
 
@@ -981,15 +1152,9 @@ lemma bruh :
 lemma CharSum_over_ZMod_to_Range (a b x y x₀ : ℤ) :
     CharSum χ ψ f₁ f₀ g₁ g₀ (p^(2*α)) = ∑ x : (Finset.range (p^(2*α))).filter (ZModIsUnit (p^(2*α))), χ (rationalFunc f₁ f₀ x (p^(2*α))) * ψ (rationalFunc g₁ g₀ x (p^(2*α))) := by
   rw [CharSum]
-  
   sorry
 
-
-
-
-
-
-theorem CharSum_in_two_sums (a b x y : ℤ) (h : x = y + z * (p^α : ℕ)) [NeZero (p^α : ℕ)] :
+theorem CharSum_in_two_sums' (a b x y : ℤ) (h : x = y + z * (p^α : ℕ)) [NeZero (p^α : ℕ)] :
     CharSum χ ψ f₁ f₀ g₁ g₀ (p^(2*α)) = ∑ y₀ : (ZMod (p^α))ˣ, (χ (rationalFunc f₁ f₀ y₀ (p^α)) * ψ (rationalFunc g₁ g₀ y₀ (p^α))) * (∑ z₀ : (ZMod (p^α : ℕ)), eZMod (p^α) ((hFunc z χ ψ f₁ f₀ g₁ g₀ x y y₀ (p^α) hp) * z₀)) := by
   rw [CharSum]
   sorry

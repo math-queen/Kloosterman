@@ -255,7 +255,6 @@ lemma h₂Andh₃ (a : ℕ): a ≥ 1 ∧ (a < 1 ∨ a > 1) → a ≥ 2 := by
   · exact a_lt_one
 -/
 
--- # ASK Kevin: Should I PR this?
 /- for the lemma `sum_move_two` -/
 lemma Nat.lt_right_cancel (a₁ a₂ a₃ : ℕ) (h : a₃ > a₂) : a₁ < a₃ → a₁ - a₂ < a₃ - a₂ := by 
   intro ha₁_lt_ha₃
@@ -503,7 +502,7 @@ lemma poly_at_yIsUnit (p₀ : Polynomial ℤ) (x y : ℤ) (H : (taylor y p₀).s
   sorry
 
 
-
+/- 
 lemma poly_eval_ZMod_IsUnit_inv_one (p₀ : Polynomial ℤ) (x y : ℤ) (h : x = y + z * (p^α : ℕ)) (p₀_at_xIsUnit : IsUnit ((p₀.eval x : ℤ) : ZMod (p^(2*α)))) : 
     ((p₀.eval y : ℤ) : ZMod (p^(2*α))) * rationalFunc_inverse p₀ y (p^(2*α)) = 1 := by
 
@@ -514,6 +513,7 @@ lemma poly_eval_ZMod_IsUnit_inv_one (p₀ : Polynomial ℤ) (x y : ℤ) (h : x =
   simp only [rationalFunc_inverse]
   exact ZMod.mul_inv_of_unit (↑(eval y p₀)) yIsUnit
    -/
+-/
 
 lemma ZMod_IsUnit_inv_eq_iff_eq_mul {a b c : ZMod (p^(2*α))} (h : IsUnit b): a * b⁻¹ = c ↔ a = c * b := by
   -- exact mul_inv_eq_iff_eq_mul (G := ZMod (p^(2*α)))
@@ -530,12 +530,14 @@ lemma ZMod_IsUnit_inv_eq_iff_eq_mul {a b c : ZMod (p^(2*α))} (h : IsUnit b): a 
     rw [mul_one]
   
   -- exact False.elim IsUnit
+
 /- 
 theorem poly_taylor_eval_ZMod (p₀ : Polynomial ℤ) (x y : ℤ) (H : (taylor y p₀).support.Nonempty) (support_le : (taylor y p₀).support.max' H > 0) (h : x = y + z * (p^α : ℕ)) :
     p₀.eval x ≡ p₀.eval y + ((Polynomial.derivative (R := ℤ)) p₀).eval y * z * (p^α : ℕ) [ZMOD (p^(2*α))] := by
 -/
 /- corollary of theorem `poly_taylor_eval_ZMod` -/
 -- Do something about the `IsUnit (p₀.eval x)` later
+-- this should become the final boss for the power world
 lemma rationalFunc_eq_ZMod (p₁ p₀ : Polynomial ℤ) (x y : ℤ) (H₁ : (taylor y p₁).support.Nonempty) (H₀ : (taylor y p₀).support.Nonempty) (support_le_H₁ : (taylor y p₁).support.max' H₁ > 0) 
     (support_le_H₀ : (taylor y p₀).support.max' H₀ > 0) (h : x = y + z * (p^α : ℕ)) (p₀_at_xIsUnit : IsUnit ((p₀.eval x : ℤ) : ZMod (p^(2*α)))) :
     rationalFunc (p₁) (p₀) (x) (p^(2*α)) = rationalFunc (p₁) (p₀) (y) (p^(2*α)) 
@@ -549,11 +551,77 @@ lemma rationalFunc_eq_ZMod (p₁ p₀ : Polynomial ℤ) (x y : ℤ) (H₁ : (tay
   simp only [rationalFunc_inverse]
   repeat rw [cast_add]
   rw [cast_mul]
-  field_simp
+  rw [add_mul]
+  repeat rw [mul_add]
+  /- process of cancelling out `↑(eval y p₀)` with its inverse -/
+  -- gets rid of the inverses in the first term of the rhs
+  rw [mul_assoc]
+  rw [ZMod.inv_mul_of_unit ((p₀.eval y : ℤ) : ZMod (p^(2*α))) (poly_at_yIsUnit z p₀ x y H₀ support_le_H₀ p₀_at_xIsUnit h)]
+  -- moving around `↑(eval y p₀)` so that it will be cancelled with its inverse term
+  rw [mul_assoc (((((Polynomial.derivative (R := ℤ)) p₁).eval y : ℤ) : ZMod (p^(2*α))) * ((p₀.eval y : ℤ) : ZMod (p^(2*α)))⁻¹ - ((p₀.eval y : ℤ) : ZMod (p^(2*α)))⁻¹ ^ 2 * ((((Polynomial.derivative (R := ℤ)) p₀).eval y : ℤ) : ZMod (p^(2*α))) * ((p₁.eval y : ℤ) : ZMod (p^(2*α))))]
+  rw [mul_assoc (((((Polynomial.derivative (R := ℤ)) p₁).eval y : ℤ) : ZMod (p^(2*α))) * ((p₀.eval y : ℤ) : ZMod (p^(2*α)))⁻¹ - ((p₀.eval y : ℤ) : ZMod (p^(2*α)))⁻¹ ^ 2 * ((((Polynomial.derivative (R := ℤ)) p₀).eval y : ℤ) : ZMod (p^(2*α))) * ((p₁.eval y : ℤ) : ZMod (p^(2*α))))]
+  rw [mul_assoc (z : ZMod (p^(2*α)))]
+  rw [mul_comm (p^α : ZMod (p^(2*α)))]
+  rw [← mul_assoc (z : ZMod (p^(2*α)))]
+  rw [mul_comm (z : ZMod (p^(2*α)))]
+  rw [mul_assoc ((p₀.eval y : ℤ) : ZMod (p^(2*α)))]
+  rw [← mul_assoc]
+  -- rearranging to make sure the inverse `↑(eval y p₀)⁻¹` will be cancelled 
+  rw [mul_assoc (((p₀.eval y : ℤ) : ZMod (p^(2*α)))⁻¹ ^ 2)]
+  nth_rw 1 [pow_two]
+  rw [mul_assoc ((p₀.eval y : ℤ) : ZMod (p^(2*α)))⁻¹]
+  rw [mul_comm ((p₀.eval y : ℤ) : ZMod (p^(2*α)))⁻¹]
+  rw [sub_mul]
+  -- we have expanded out the expression
+  -- rearrange the third term after expansion for the inverse to be cancelled out
+  rw [mul_assoc ((((Polynomial.derivative (R := ℤ)) p₁).eval y : ℤ) : ZMod (p^(2*α)))]
+  -- rearrange the fourth term
+  rw [mul_assoc ((p₀.eval y : ℤ) : ZMod (p^(2*α)))⁻¹]
+  rw [mul_assoc ((p₀.eval y : ℤ) : ZMod (p^(2*α)))⁻¹]
+  rw [mul_assoc ((((Polynomial.derivative (R := ℤ)) p₀).eval y : ℤ) : ZMod (p^(2*α)))]
+  rw [mul_assoc ((((Polynomial.derivative (R := ℤ)) p₀).eval y : ℤ) : ZMod (p^(2*α)))]
+  rw [mul_assoc (((p₁.eval y : ℤ) : ZMod (p^(2*α)))) ((p₀.eval y : ℤ) : ZMod (p^(2*α)))⁻¹ ((p₀.eval y : ℤ) : ZMod (p^(2*α)))]
+  -- cancel out the inverse!
+  rw [ZMod.inv_mul_of_unit ((p₀.eval y : ℤ) : ZMod (p^(2*α))) (poly_at_yIsUnit z p₀ x y H₀ support_le_H₀ p₀_at_xIsUnit h)]
   
+  /- rearrange the fourth term to cancel out the second and fourth term -/
+  simp only [mul_one]
+  nth_rw 1 [mul_comm ((((Polynomial.derivative (R := ℤ)) p₀).eval y : ℤ) : ZMod (p^(2*α)))]
+  rw [← mul_assoc ((p₀.eval y : ℤ) : ZMod (p^(2*α)))⁻¹]
+  rw [mul_comm ((p₀.eval y : ℤ) : ZMod (p^(2*α)))⁻¹]
+  -- expansion out of the brackets
+  rw [sub_mul]
+  -- more rearrangement done in the fourth term for the cancellation
+  rw [mul_assoc (((p₁.eval y : ℤ) : ZMod (p^(2*α))) * ((p₀.eval y : ℤ) : ZMod (p^(2*α)))⁻¹)]
+  rw [← mul_assoc ((((Polynomial.derivative (R := ℤ)) p₀).eval y : ℤ) : ZMod (p^(2*α)))]
+  simp only [cast_mul]
+  simp only [ZMod.int_cast_cast] 
+  simp only [Nat.cast_pow, cast_pow, cast_ofNat]
+  rw [← Nat.cast_pow] -- take the arrow out of the brackets
 
+  /- rearranging the second term on the lhs to match it with the third term on the rhs -/
+  rw [mul_assoc]
 
-  sorry
+  /- rearranging ↑(p ^ α) to merge them together to have ↑(p ^ (2*α)) which will be zero -/
+  rw [mul_assoc (((((Polynomial.derivative (R := ℤ)) p₁).eval y : ℤ) : ZMod (p^(2*α))) * ((p₀.eval y : ℤ) : ZMod (p^(2*α)))⁻¹ - (((p₀.eval y : ℤ) : ZMod (p^(2*α)))⁻¹) ^ 2 * (((((Polynomial.derivative (R := ℤ)) p₀).eval y : ℤ) : ZMod (p^(2*α))) * ((p₁.eval y : ℤ) : ZMod (p^(2*α)))))]
+  -- rw [mul_assoc (((p₀.eval y : ℤ) : ZMod (p^(2*α)))⁻¹) ^ 2 * (((Polynomial.derivative (R := ℤ)) p₀).eval y : ZMod (p^(2*α))) * (p₁.eval y : ZMod (p^(2*α)))]
+  rw [mul_assoc ((((Polynomial.derivative (R := ℤ)) p₀).eval y : ℤ) : ZMod (p^(2*α)))]
+  rw [mul_comm (z : ZMod (p^(2*α)))]
+  rw [mul_assoc (p^α : ZMod (p^(2*α)))]
+  rw [mul_comm ((((Polynomial.derivative (R := ℤ)) p₀).eval y : ℤ) : ZMod (p^(2*α)))]
+  repeat rw [← mul_assoc (z : ZMod (p^(2*α)))]
+  rw [mul_comm (z : ZMod (p^(2*α)))]
+  rw [← mul_assoc (p^α : ZMod (p^(2*α)))]
+  rw [mul_assoc (p^α : ZMod (p^(2*α))) (z : ZMod (p^(2*α))) (z : ZMod (p^(2*α)))]
+  rw [← mul_assoc (p^α : ZMod (p^(2*α)))]
+  rw [← pow_two]
+  push_cast
+  rw [← pow_mul]
+  rw [mul_comm α 2]
+  norm_cast
+  rw [ZMod.nat_cast_self]
+  ring
+
   /-
   simp only [rationalFunc_well_defined_ZMod]
   simp only [rationalFunc, rationalFunc_deriv] 

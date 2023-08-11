@@ -63,6 +63,7 @@ def rationalFunc_deriv (p₁ p₀ : Polynomial ℤ) (x₀ : ℤ) (q : ℕ) : ZMo
 def CharSum (q : ℕ) : ℂ :=
   ∑ x : (ZMod q)ˣ, χ (rationalFunc f₁ f₀ x q) * ψ (rationalFunc g₁ g₀ x q)
 
+-- section PolyTaylorSeries
 
 theorem poly_taylor (p₀ : Polynomial ℤ) (y : ℤ) : 
     p₀ = ((taylor y p₀).sum fun i a => C a * (X - C y) ^ i) := by
@@ -218,6 +219,8 @@ lemma poly_taylor_eval_term_by_term (p₀ : Polynomial ℤ) (x y : ℤ) (H : (ta
 
 
 
+-- section SumTaylorSeries
+
   /-
   have H : (Finset.range ((taylor y p₀).support.max' H + 1) \ {0}) = {1} ∪ ((Finset.range ((taylor y p₀).support.max' H + 1) \ {0}) \ {1}) := by
     rw [Finset.union_sdiff_of_subset]
@@ -361,7 +364,7 @@ theorem poly_taylor_eval_ZMod (p₀ : Polynomial ℤ) (x y : ℤ) (H : (taylor y
 -/ 
 
 theorem poly_taylor_eval_ZMod (p₀ : Polynomial ℤ) (x y : ℤ) (H : (taylor y p₀).support.Nonempty) (support_le : (taylor y p₀).support.max' H > 0) (h : x = y + z * (p^α : ℕ)) :
-    ((p₀.eval x : ℤ) : ZMod (p^(2*α))) =  ((p₀.eval y + ((Polynomial.derivative (R := ℤ)) p₀).eval y * z * (p^α : ℕ) : ℤ) : ZMod (p^(2*α))) := by
+    ((p₀.eval x : ℤ) : ZMod (p^(2*α))) = ((p₀.eval y + ((Polynomial.derivative (R := ℤ)) p₀).eval y * z * (p^α : ℕ) : ℤ) : ZMod (p^(2*α))) := by
   rw [poly_taylor_eval_term_by_term z p₀ x y H support_le h]
   have hz := sum_higher_terms_in_poly z p₀ x y H support_le h
   cases' hz with z₀ hz₀
@@ -1043,6 +1046,41 @@ example (hα : 0 < α) : (ZMod (p^(2*α)))ˣ ≃ (ZMod (p^α))ˣ × ZMod (p^α) 
       · sorry
 -/
 
+lemma valZModLarger_eq_ZModSmaller {a b : ℕ} (h : b ≤ a) [NeZero b] (n : ZMod b) : 
+    (n : ZMod a).val = n.val := by
+  rw [ZMod.cast_eq_val]
+  rw [ZMod.val_cast_of_lt]
+  suffices n.val < b by
+    exact Nat.lt_of_lt_of_le this h
+  exact ZMod.val_lt n
+  
+-- probably the assumption `(hα : α > 0)` will need to go on the top later
+lemma pPow_lt_pTwoPow (hα : α > 0) : p^α < p^(2*α) := by
+  apply pow_lt_pow
+  rw [← Nat.prime_iff] at hp
+  · exact Nat.Prime.one_lt hp
+  · exact lt_two_mul_self hα
+
+/- we don't need this anymore for now; erase this later when completed -/
+/- for the `right_inv` of def `UnitEquivUnitProdZMod` -/
+lemma sub_lt_add_lt {a b c d : ℕ} (hac : a < c) (hbdc : b < d - c) (hdc : d > c) : a + b < d := by 
+  have hdc_le := Nat.le_of_lt hdc
+  rw [← Nat.sub_add_cancel hdc_le]
+  rw [add_comm (d-c) c]
+  exact add_lt_add hac hbdc
+
+lemma sub_lt_add_le {a b c d : ℕ} (hac : a < c) (hbdc : b ≤ d - c) (hdc : d > c) : a + b < d := by 
+  have hdc_le := Nat.le_of_lt hdc
+  rw [← Nat.sub_add_cancel hdc_le]
+  rw [add_comm (d-c) c]
+  exact add_lt_add_of_lt_of_le hac hbdc
+
+-- Originally for WTF statement 
+instance : (ZMod (p^(2*α))) = (ZMod (p^α * p^α)) := by
+  rw [mul_comm]
+  rw [pow_mul] -- infer_instance doesn't work
+  rw [pow_two]
+
 def UnitEquivUnitProdZMod (hα : 0 < α) : (ZMod (p^(2*α)))ˣ ≃ (ZMod (p^α))ˣ × ZMod (p^α) where
   toFun x := ⟨Units.map (ZMod.castHom dvd_pow_two _).toMonoidHom x, aux_fun x⟩
   invFun yz := ZMod.unitOfCoprime (yz.1.val.val + yz.2.val * p^α) <| by
@@ -1063,19 +1101,34 @@ def UnitEquivUnitProdZMod (hα : 0 < α) : (ZMod (p^(2*α)))ˣ ≃ (ZMod (p^α))
     ext
     simp only [RingHom.toMonoidHom_eq_coe, Units.coe_map, MonoidHom.coe_coe, ZMod.castHom_apply, ZMod.coe_unitOfCoprime,
       Nat.cast_add, Nat.cast_mul, Nat.cast_pow, aux_fun]
-    sorry -- eew
+    /- this part is my proof -/ -- eew
+    rw [ZMod.val_cast_of_lt]
+    · norm_cast
+      rw [ZMod.cast_eq_val]
+      rw [ZMod.val_nat_cast]
+      suffices (x : ZMod (p^(2*α))).val % p ^ α + (x : ZMod (p^(2*α))).val / p ^ α * p ^ α = (x : ZMod (p^(2*α))).val by
+        rw [this]
+        exact val_mod (p ^ (2 * α)) ↑x
+      exact Nat.mod_add_div' (x : ZMod (p^(2*α))).val (p ^ α)
+    · rw [Nat.div_lt_iff_lt_mul]
+      · rw [← pow_two]
+        rw [← pow_mul]
+        rw [mul_comm α 2]
+        exact ZMod.val_lt (x : ZMod (p^(2*α)))
+      · rw [← Nat.prime_iff] at hp
+        exact Nat.pos_pow_of_pos α (Nat.Prime.pos hp)
   right_inv := by
-    rw [← Nat.prime_iff] at hp
+    have hNatp := Iff.mpr Nat.prime_iff hp
     rintro ⟨y, z⟩
-    have : NeZero (p^α : ℕ) := ⟨pow_ne_zero α <| Nat.Prime.ne_zero hp⟩
+    have : NeZero (p^α : ℕ) := ⟨pow_ne_zero α <| Nat.Prime.ne_zero hNatp⟩
     ext <;> simp
     · convert mul_zero z -- changed this bit from Kevin's code
       norm_cast
       exact ZMod.nat_cast_self (p ^ α)
     · simp only [aux_fun]
-      rw [ZMod.val_add]
-      rw [Nat.mod_eq_of_lt]
-      · rw [ZMod.val_mul]
+      rw [ZMod.val_add] -- the calculation of evil coercion starts here
+      rw [Nat.mod_eq_of_lt] 
+      · rw [ZMod.val_mul] -- very similar to the proof i need to prove
         rw [Nat.mod_eq_of_lt]
         · norm_cast
           rw [ZMod.val_cast_of_lt, Nat.add_mul_div_right]
@@ -1083,16 +1136,56 @@ def UnitEquivUnitProdZMod (hα : 0 < α) : (ZMod (p^(2*α)))ˣ ≃ (ZMod (p^α))
             rw [Nat.div_eq_zero]
             · norm_cast
               rw [aargh]; simp
+              exact Nat.le_of_lt (pPow_lt_pTwoPow hp hα)
+              /- alternate proof before we stated the lemma `pPow_lt_pTwoPow`
               apply pow_le_pow
-              linarith [Nat.Prime.pos hp]
+              linarith [Nat.Prime.pos hNatp]
               linarith
-            · sorry
-          · sorry
-          · sorry
-        · sorry
-      · sorry
+              -/
+            · rw [valZModLarger_eq_ZModSmaller]
+              exact ZMod.val_lt (y : ZMod (p^α))
+              exact Nat.le_of_lt (pPow_lt_pTwoPow hp hα)
+          · exact Fin.size_positive'
+          · exact pPow_lt_pTwoPow hp hα
+        · norm_cast
+          rw [ZMod.val_cast_of_lt]
+          · suffices : (z : ZMod (p^(2*α))).val < p ^ α
+            · /- WTF this should work honestly
+              have hpos := Nat.zero_lt_of_lt this
+              rw [pow_mul']
+              rw [pow_two]
+              exact Nat.mul_lt_mul_of_pos_right this hpos -- are you kidding me
+              -/ 
+              -- another proof is to use the corollary of the proof below on the bottom
+              sorry
+            · rw [valZModLarger_eq_ZModSmaller (Nat.le_of_lt (pPow_lt_pTwoPow hp hα))]
+              exact ZMod.val_lt z
+          · exact pPow_lt_pTwoPow hp hα
+      · suffices (y : ZMod (p^(2*α))).val < p ^ α ∧ ((z : ZMod (p^(2*α))) * (p : ZMod (p^(2*α)))^α).val ≤ p ^ (2 * α) - 1 * p ^ α by
+          rw [one_mul] at this
+          exact sub_lt_add_le this.left this.right (pPow_lt_pTwoPow hp hα)
+        constructor
+        · rw [valZModLarger_eq_ZModSmaller (Nat.le_of_lt (pPow_lt_pTwoPow hp hα))]
+          exact ZMod.val_lt (y : ZMod (p^α))
+        · rw [ZMod.val_mul]
+          rw [Nat.mod_eq_of_lt] -- becomes 2 goals after this point
+          · norm_cast -- corollary of this result will prove the WTF part above 
+            rw [ZMod.val_cast_of_lt (pPow_lt_pTwoPow hp hα)]
+            rw [valZModLarger_eq_ZModSmaller (Nat.le_of_lt (pPow_lt_pTwoPow hp hα))]
+            have hz_lt := ZMod.val_lt z
+            have hz_le := Nat.le_pred_of_lt hz_lt
+            rw [mul_comm 2 α]
+            rw [pow_mul]
+            rw [pow_two]
+            rw [← Nat.mul_sub_right_distrib (p ^ α) 1 (p ^ α)]
+            -- rw [← mul_one (- p^α)]
+            -- rw [← Nat.mul_sub_right_distrib]
+            -- rw [one_mul]
+            exact Nat.mul_le_mul_right (p^α) hz_le 
+          · norm_cast
+            rw [ZMod.val_cast_of_lt (pPow_lt_pTwoPow hp hα)]
+            sorry -- equivalent statement to the WTF above
 
--- figured out the proof by referencing the def `castHom` and its corresponding theorems from the doc `mathlib4/Mathlib/Data/ZMod/Basic.lean`
 /- I think `Finset.sum_bij'` follows the structure of the isomorphism `UnitEquivUnitProdZMod` -/
 theorem sum_bijection (f : ZMod (p^(2*α)) → ℂ) (g : ℤ → ZMod (p^(2*α))) [NeZero (p^α : ℕ)] (hα : 0 < α) :
     ∑ x : (ZMod (p^(2*α)))ˣ, f (g x) = ∑ yz : (ZMod (p^α))ˣ × ZMod (p^α), f (g (yz.1 + yz.2 * (p^α : ℕ))) := by
@@ -1102,14 +1195,28 @@ theorem sum_bijection (f : ZMod (p^(2*α)) → ℂ) (g : ℤ → ZMod (p^(2*α))
     -- (i := UnitEquivUnitProdZMod.toFun i) (j := UnitEquivUnitProdZMod.invFun j)
     -- refine fun a ha => ?_ a ha
   · intro a ha
+    apply congr_arg
+    apply congr_arg
+    simp only [Equiv.toFun_as_coe_apply]
     
+    
+
+    
+
     sorry
-  · exact fun a ha => Finset.mem_univ (Equiv.invFun (UnitEquivUnitProdZMod hp hα) a)
+  · exact fun a _ => Finset.mem_univ (Equiv.invFun (UnitEquivUnitProdZMod hp hα) a)
   · intro a _
     exact (UnitEquivUnitProdZMod hp hα).left_inv a
   · intro a _
     exact (UnitEquivUnitProdZMod hp hα).right_inv a -- it worked!
   
+  
+
+
+
+
+
+
   
   
 
@@ -1124,6 +1231,17 @@ theorem CharSum_in_two_sums (a b x y : ℤ) (h : x = y + z * (p^α : ℕ)) [NeZe
   rw [CharSum]
   sorry
 
+/- 
+inner sum vanishes unless h (y) ≡ 0 [ZMOD p^α] 
+By the theorem `Finset.sum_empty` the sum equals zero when h (y) ≡ 0 [ZMOD p^α] has no solution
+-/
+-- (hFunc z₁ χ ψ f₁ f₀ g₁ g₀ x y x₀ (p^α) hp)
+theorem even_pow_final_formula (x y x₀ : ℤ) (h : x = y + z * (p^α : ℕ)) :
+    CharSum χ ψ f₁ f₀ g₁ g₀ (p^(2*α)) = (p^α : ℕ) * (∑ r : (ZMod_sol_hFunc z χ ψ hp f₁ f₀ g₁ g₀ x y), χ (rationalFunc f₁ f₀ r (p^α)) * ψ (rationalFunc g₁ g₀ r (p^α))) := by
+  sorry
+
+
+
 
 /- 
 def CharSum (q : ℕ) : ℂ :=
@@ -1137,7 +1255,7 @@ def CharSum (q : ℕ) : ℂ :=
 
 
 
-
+-- figured out the proof by referencing the def `castHom` and its corresponding theorems from the doc `mathlib4/Mathlib/Data/ZMod/Basic.lean`
 /- old codes -/
 
 def ZModIsUnit (q : ℕ): ℕ → Prop :=
@@ -1164,7 +1282,7 @@ inner sum vanishes unless h (y) ≡ 0 [ZMOD p^α]
 By the theorem `Finset.sum_empty` the sum equals zero when h (y) ≡ 0 [ZMOD p^α] has no solution
 -/
 -- (hFunc z₁ χ ψ f₁ f₀ g₁ g₀ x y x₀ (p^α) hp)
-theorem even_pow_final_formula (x y x₀ : ℤ) (h : x = y + z * (p^α : ℕ)) :
+theorem even_pow_final_formula' (x y x₀ : ℤ) (h : x = y + z * (p^α : ℕ)) :
     CharSum χ ψ f₁ f₀ g₁ g₀ (p^(2*α)) = (p^α : ℕ) * (∑ r : (ZMod_sol_hFunc z χ ψ hp f₁ f₀ g₁ g₀ x y), χ (rationalFunc f₁ f₀ r (p^α)) * ψ (rationalFunc g₁ g₀ r (p^α))) := by
   sorry
 

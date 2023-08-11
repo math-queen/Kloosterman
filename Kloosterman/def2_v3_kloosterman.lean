@@ -100,7 +100,7 @@ def kloostermanSum (a : ℤ) (b : ℤ) (q : ℕ) : ℂ :=
 --@[simp] lemma GaussianInt.toComplex_eq_cast (a : ZMod q) :
 --    GaussianInt.toComplex (a : GaussianInt) = ZMod.cast a := sorry
 
-section elementary
+section Elementary
 -- depends only on the residue class of a and b modulo m
 lemma zmod_eq_kloostermanSum (a : ℤ) (b : ℤ) (q : ℕ) : kloostermanSum a b q = kloostermanSum (a + q) (b + q) q := by
   simp only [kloostermanSum]
@@ -185,7 +185,7 @@ theorem metamorphosis {q : ℕ} (a : ℤ) (b : ℤ) (haq : ((a : ZMod q).val).gc
   · assumption
   · assumption
 
-end elementary
+end Elementary
 /- 
  -- K(ac, b; m) = K(a, bc; m) if gcd(c, m) = 1
 lemma lemma3_2 (a : ℤ) (b : ℤ) (q : ℕ) (gcd_cq : c.gcd q = 1) : kloostermanSum (a*c) b q = kloostermanSum a (b*c) q  := by

@@ -1198,7 +1198,7 @@ theorem sum_bijection (f : ZMod (p^(2*α)) → ℂ) (g : ℤ → ZMod (p^(2*α))
     apply congr_arg
     apply congr_arg
     simp only [Equiv.toFun_as_coe_apply]
-    
+    -- I think I need Kevin's help
     
 
     
@@ -1217,7 +1217,7 @@ theorem sum_bijection (f : ZMod (p^(2*α)) → ℂ) (g : ℤ → ZMod (p^(2*α))
 
 
 
-  
+
   
 
 theorem Sum_into_two_sums (f : ZMod (p^(2*α)) → ℂ) (g : ℤ → ZMod (p^(2*α))) [NeZero (p^α : ℕ)] :

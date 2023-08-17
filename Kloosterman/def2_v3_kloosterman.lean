@@ -61,7 +61,11 @@ lemma ZMod.val_add_val (x y : ZMod q) [NeZero q] : x.val + y.val = (x+y).val ∨
     simp
   done
 
-lemma eZMod_add (x y : ZMod q) : eZMod q (x + y) = eZMod q x * eZMod q y := by
+/- originally had `lemma eZMod_add (x y : ZMod q) : eZMod q (x + y) = eZMod q x * eZMod q y`
+but erased `x` because the lemma took in two x 
+
+-/
+lemma eZMod_add (y : ZMod q) : eZMod q (x + y) = eZMod q x * eZMod q y := by
   simp only [eZMod_def]
   rw [← Complex.exp_add]
   rw [exp_eq_exp_iff_exists_int]

@@ -112,7 +112,8 @@ lemma MulChar_one_Unit : IsUnit (χ' (χ) (1) : ℂ) := by
   apply Ne.isUnit
   exact MulChar_one_nonZero χ
 
-lemma congr_IntToNat' {q : ℕ} (a : ℤ) (haq : ((a : ZMod q).val).gcd q = 1) [NeZero q]: ∃(a₁ : ℕ), (a₁.coprime q) ∧ (a ≡ a₁ [ZMOD q]) := by
+lemma congr_IntToNat' {q : ℕ} (a : ℤ) (haq : ((a : ZMod q).val).gcd q = 1) [NeZero q]: 
+    ∃(a₁ : ℕ), (a₁.coprime q) ∧ (a ≡ a₁ [ZMOD q]) := by
   use (a : ZMod q).val
   apply And.intro
   · exact haq

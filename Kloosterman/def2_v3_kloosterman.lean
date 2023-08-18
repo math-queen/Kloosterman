@@ -19,9 +19,11 @@ variable (q : ℕ) (x : ZMod q) (y : ℤ)
 
 lemma eZMod_def : eZMod q x = Complex.exp (2 * Real.pi * Complex.I * x.val / q) := rfl
 
+-- delete this later 
 example (a : ℤ) : a / 0 = 0 := by exact Int.ediv_zero a
 
-lemma intToComplex (r : ℤ) : ((r : ℝ) : ℂ) = r := rfl
+-- probably need to delete this later 
+lemma intToComplex (r : ℤ) : ((r : ℝ) : ℂ) = r := by rfl
 
 lemma bar (a b : ℕ) (q : ℕ) (hq : q ≠ 0) (ha : a < q) (hab : a ≡ b [MOD q]) :
     ∃ n, b = a + n * q := by

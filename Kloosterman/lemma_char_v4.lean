@@ -97,7 +97,7 @@ lemma MulChar_nonZero {a : ZMod (p^(2*α) : ℕ)} (h : IsUnit a) : χ a ≠ 0 :=
 -- theorem mul_char.map_nonunit
 lemma MulChar_one_nonZero : χ' (χ) (1) ≠ 0 := by
   rw [well_defined]
-  have h : IsUnit ((1 + (1 : ZMod (p^α : ℕ))  * ↑(p ^ α)) : ZMod (p^(2*α) : ℕ))
+  have h : IsUnit ((1 + (1 : ZMod (p^α : ℕ)) * ↑(p ^ α)) : ZMod (p^(2*α) : ℕ))
   { apply Iff.mpr isUnit_iff_exists_inv
     use (1 - (1 : ZMod (p^α : ℕ))*(p^α : ℕ))
     ring

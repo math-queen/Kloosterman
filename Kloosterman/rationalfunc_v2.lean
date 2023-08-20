@@ -88,7 +88,7 @@ theorem poly_taylor_eval (p₀ : Polynomial ℤ) (x y : ℤ) (h : x = y + z * (p
   simp only [eval_finset_sum, eval_mul, eq_intCast, eval_int_cast, cast_id, eval_pow, eval_sub, eval_X, Nat.cast_pow]
   rw [h]
   simp only [Nat.cast_pow, add_sub_cancel']
-  exact rfl
+  rfl
   -- rw [Polynomial.eval_C]
   -- rw [Polynomial.eval_X]
 
@@ -1133,12 +1133,26 @@ lemma NeZeroForSmaller {a b : ℕ} (h : b ≤ a) [NeZero b] : NeZero a := by
 lemma IntcoeZModLarger_eq_ZModSmaller (a b : ℕ) (h : b ≤ a) [NeZero b] (n : ZMod a) : 
     ((n : ZMod b) : ℤ) = (((n : ZMod b) : ZMod a) : ℤ) := by
   -- suffices : ((n : ZMod b) : ℤ) < b 
-  suffices : (n : ZMod b).val = ((n : ZMod b) : ZMod a).val
-  · -- rw [ZMod.cast_eq_val]
+  suffices (n : ZMod b).val = ((n : ZMod b) : ZMod a).val by
+    -- rw [ZMod.cast_eq_val]
     have NeZeroFora := NeZeroForSmaller h
-    sorry
-  · exact Eq.symm (valZModLarger_eq_ZModSmaller h ↑n)
-  done
+    rw [← ZMod.nat_cast_val]
+    rw [← ZMod.nat_cast_val ((n : ZMod b) : ZMod a)]
+    rw [this]
+  exact Eq.symm (valZModLarger_eq_ZModSmaller h ↑n)
+
+/-
+/- for the second goal of the second goal for the theorem `sum_bijection` -/
+lemma NatcoeZModLarger_eq_ZModSmaller_to_Int (a b n : ℕ) (h : b ≤ a) [NeZero b] : 
+    (((n : ZMod b) : ZMod a) : ℤ) = ((n : ZMod b) : ℤ) := by
+  suffices ((n : ZMod b) : ZMod a).val = (n : ZMod b).val by
+    have NeZeroFora := NeZeroForSmaller h
+    rw [← ZMod.nat_cast_val ((n : ZMod b) : ZMod a)] 
+    rw [this]
+    rw [← ZMod.nat_cast_val (n : ZMod b)]
+  exact NatcoeZModLarger_eq_ZModSmaller_to_val h
+
+-/
 
 lemma valZModLarger_eq_ZModSmaller' {a b : ℕ} (h : b ≤ a) [NeZero b] (n : ZMod b) : 
     (n : ZMod a).val = n.val := by
@@ -1184,7 +1198,9 @@ lemma NatcoeZModLarger_eq_ZModSmaller_to_Int (a b n : ℕ) (h : b ≤ a) [NeZero
 /- I think `Finset.sum_bij'` follows the structure of the isomorphism `UnitEquivUnitProdZMod` 
 This version of the theorem is not applicable to the below other theorems
 Use the version 2
--/
+
+Previous version
+
 theorem sum_bijection (f : ZMod (p^(2*α)) → ℂ) (g : ℤ → ZMod (p^(2*α))) [NeZero (p^α : ℕ)] (hα : 0 < α) :
     ∑ x : (ZMod (p^(2*α)))ˣ, f (g x) = ∑ yz : (ZMod (p^α))ˣ × ZMod (p^α), f (g (yz.1 + yz.2 * (p^α : ℕ))) := by
   apply Finset.sum_bij' (fun i _ => (UnitEquivUnitProdZMod hp hα).toFun i) (j := fun j _ => (UnitEquivUnitProdZMod hp hα).invFun j) -- map `i` is toFun and map `j` must be invFun
@@ -1212,8 +1228,10 @@ theorem sum_bijection (f : ZMod (p^(2*α)) → ℂ) (g : ℤ → ZMod (p^(2*α))
       -- rw [ZModLarger_eq_ZModSmaller]
     · rw [ZMod_Int_cast_mul]
       · rw [NatcoeZModLarger_eq_ZModSmaller_to_Int (h := Nat.le_of_lt (pPow_lt_pTwoPow hp hα))]
+        
+        
         -- rw [ZMod.coe_int_cast (p^α)]
-        sorry
+        
       · -- rw [pow_mul p 2 α]
         -- rw [pow_two]
         sorry
@@ -1242,10 +1260,49 @@ theorem sum_bijection (f : ZMod (p^(2*α)) → ℂ) (g : ℤ → ZMod (p^(2*α))
       
       sorry
 
-/- for the 1st - 2nd - 2nd goal of the theorem `sum_bijection` -/
+-/
+
+/- for the 2nd - 2nd goal of the theorem `sum_bijection` -/
 lemma lt_nat_coe_zmod_coe_int_eq_coe_int (n q : ℕ) [NeZero q] (h : n < q) : ((n : ZMod q) : ℤ) = (n : ℤ) := by 
   rw [← ZMod.nat_cast_val (n : ZMod q)]
   nth_rw 2 [← ZMod.val_cast_of_lt h]
+
+/- for the 2nd - 2nd - 2nd goal of the theorem `sum_bijection` -/
+lemma zmod_coe_int_lt (q : ℕ) (n : ZMod q) [NeZero q] : (n : ℤ) < q := by 
+  rw [← ZMod.nat_cast_val n]
+  exact Iff.mpr ofNat_lt (ZMod.val_lt n)
+
+/- originally for the last - 2nd goal of the theorem `sum_bijection`
+useless, delete this later 
+-/
+lemma val_div_primePow_le [NeZero (p^α : ℕ)] (a : ZMod (p ^ (2 * α))) : a.val / p ^ α ≤ p ^ α - 1 := by
+  apply Nat.lt_succ.mp
+  rw [Nat.div_lt_iff_lt_mul Fin.size_positive']
+  rw [Nat.succ_eq_add_one]
+  rw [Nat.sub_add_cancel (Fin.size_positive')]
+  rw [← pow_two]
+  rw [← pow_mul]
+  rw [mul_comm α 2]
+  exact ZMod.val_lt a
+
+-- I think it's a wrong goal in the first place 
+-- useless, delete this later 
+lemma val_div_primePow_le' [NeZero (p^α : ℕ)] (hα : 0 < α) (a : ZMod (p ^ (2 * α))) : a.val / p ^ α ≤ p ^ (α - 1) := by
+  apply Nat.lt_succ.mp
+  rw [Nat.div_lt_iff_lt_mul Fin.size_positive']
+  suffices : Nat.succ (p ^ (α - 1)) ≤ p ^ α
+  · sorry 
+  · rw [Nat.succ_eq_add_one]
+    have nat_prime_hp : Nat.Prime p := by exact Iff.mpr Nat.prime_iff hp
+    have pPrime_le_one : 1 ≤ p ^ (α - 1) := by exact Nat.one_le_pow (α - 1) p (Nat.Prime.pos nat_prime_hp)
+    have h : p ^ (α - 1) + p ^ (α - 1) ≤ p ^ α
+    { rw [← mul_two]
+      nth_rw 2 [← Nat.sub_add_cancel hα]
+      rw [pow_add]
+      rw [← Nat.one_eq_succ_zero]
+      rw [pow_one]
+      exact Nat.mul_le_mul_left (p ^ (α - 1)) (Nat.Prime.two_le nat_prime_hp) } 
+    exact add_le_of_add_le_left h pPrime_le_one
 
 -- it seems like sum_bijection_v1 is not applicable to the below theorems
 -- later I need to rewrite the proof for the below theorem 
@@ -1282,31 +1339,52 @@ theorem sum_bijection_v2 (f₁ f₂ : ZMod (p^(2*α)) → ℂ) (g₁ g₂ : ℤ 
       · rw [NatcoeZModLarger_eq_ZModSmaller_to_Int (h := Nat.le_of_lt (pPow_lt_pTwoPow hp hα))]
         -- rw [ZMod.coe_int_cast (p^α)]
         rw [lt_nat_coe_zmod_coe_int_eq_coe_int (p ^ α) (p ^ (2 * α)) (pPow_lt_pTwoPow hp hα)] 
-      · rw [pow_mul p 2 α]
-        rw [pow_two]
-        sorry
-      
-      
-
-
-      have H : ((p^α : ZMod (p^(2*α))) : ℤ) = (p^α : ℤ)
-      { sorry
-        
-      }
-      
-      sorry
+      · rw [lt_nat_coe_zmod_coe_int_eq_coe_int (p ^ α) (p ^ (2 * α)) (pPow_lt_pTwoPow hp hα)]
+        rw [NatcoeZModLarger_eq_ZModSmaller_to_Int (h := Nat.le_of_lt (pPow_lt_pTwoPow hp hα))]
+        -- rw [mul_comm 2 α] -- why motive is not type correct
+        conv => -- otherwise, gets the error : motive is not type correct
+          rhs
+          rw [mul_comm]
+          rw [pow_mul]
+          rw [pow_two]
+          rw [Nat.cast_mul]
+        rw [← Int.lt_ediv_iff_mul_lt (p ^ α : ℤ) (Iff.mpr ofNat_pos (Fin.size_positive' (n := (p ^ α)))) (Int.dvd_mul_left ↑(p ^ α) ↑(p ^ α))]
+        rw [Int.mul_ediv_assoc' (p ^ α : ℤ) (Int.dvd_refl (p ^ α : ℤ))]
+        rw [Int.ediv_self (NeZero.natCast_ne (p ^ α) ℤ)]
+        rw [one_mul]
+        exact zmod_coe_int_lt (p ^ α) ((a : ZMod (p ^ (2 * α))).val / p ^ α : ZMod (p ^ α))
     · contrapose!
       intro _
-      rw [← IntcoeZModLarger_eq_ZModSmaller]
+      rw [← IntcoeZModLarger_eq_ZModSmaller (h := Nat.le_of_lt (pPow_lt_pTwoPow hp hα))]
       norm_cast
-      rw [ZMod.cast_eq_val]
-      rw [ZMod.cast_eq_val]
-      rw [ZMod.cast_eq_val]
-      rw [ZMod.cast_eq_val]
-      rw [ZMod.val_nat_cast]
-      rw [ZMod.val_nat_cast]
+      rw [ZMod_Int_cast_mul]
+      · rw [NatcoeZModLarger_eq_ZModSmaller_to_Int (h := Nat.le_of_lt (pPow_lt_pTwoPow hp hα))]
+        rw [lt_nat_coe_zmod_coe_int_eq_coe_int (p ^ α) (p ^ (2 * α)) (pPow_lt_pTwoPow hp hα)] 
+        have hhhh := zmod_coe_int_lt (p ^ α) ↑((a : ZMod (p ^ (2 * α))).val / p ^ α)
+        have val_div_primePow_le : (((a : ZMod (p ^ (2 * α))).val / p ^ α : ZMod (p ^ α)) : ℤ) ≤ (p ^ α : ℕ) - 1 := by 
+          exact Iff.mpr le_sub_one_iff hhhh
+        have HHHH := zmod_coe_int_lt (p ^ α) (a : ZMod ((p ^ α)))
+        rw [← mul_le_mul_right (a := (p ^ α : ℤ)) (Iff.mpr ofNat_pos Fin.size_positive')] at val_div_primePow_le
+        rw [sub_mul, one_mul, ← Nat.cast_mul, ← pow_two, ← pow_mul, mul_comm α 2] at val_div_primePow_le
+        conv =>
+          rhs
+          rw [eq_sub_of_add_eq' (a := (p ^ (2 * α) : ℤ)) (c := (p ^ α : ℤ)) rfl]
+        rw [add_sub_assoc]
+        exact Int.add_lt_add_of_lt_of_le HHHH val_div_primePow_le
+      · rw [NatcoeZModLarger_eq_ZModSmaller_to_Int (h := Nat.le_of_lt (pPow_lt_pTwoPow hp hα))]
+        rw [lt_nat_coe_zmod_coe_int_eq_coe_int (p ^ α) (p ^ (2 * α)) (pPow_lt_pTwoPow hp hα)] 
+        conv => -- otherwise, gets the error : motive is not type correct
+          rhs
+          rw [mul_comm]
+          rw [pow_mul]
+          rw [pow_two]
+          rw [Nat.cast_mul]
+        rw [← Int.lt_ediv_iff_mul_lt (p ^ α : ℤ) (Iff.mpr ofNat_pos (Fin.size_positive' (n := (p ^ α)))) (Int.dvd_mul_left ↑(p ^ α) ↑(p ^ α))]
+        rw [Int.mul_ediv_assoc' (p ^ α : ℤ) (Int.dvd_refl (p ^ α : ℤ))]
+        rw [Int.ediv_self (NeZero.natCast_ne (p ^ α) ℤ)]
+        rw [one_mul]
+        exact zmod_coe_int_lt (p ^ α) ↑((a : ZMod (p ^ (2 * α))).val / p ^ α)
       
-
       /- 
       ↑(ZMod.val ↑↑x) + ↑(ZMod.val ↑x / p ^ α) * ↑p ^ α = ↑x
       
@@ -1317,13 +1395,8 @@ theorem sum_bijection_v2 (f₁ f₂ : ZMod (p^(2*α)) → ℂ) (g₁ g₂ : ℤ 
         rw [this]
         exact val_mod (p ^ (2 * α)) ↑x
       exact Nat.mod_add_div' (x : ZMod (p^(2*α))).val (p ^ α)
-
-
       -/
       
-      sorry
-
-
     /-
     let H := ((UnitEquivUnitProdZMod hp hα).toFun a)
     have : (fun i x => Equiv.toFun (UnitEquivUnitProdZMod hp hα) i) a ha = (UnitEquivUnitProdZMod hp hα).toFun a := by
@@ -1336,8 +1409,6 @@ theorem sum_bijection_v2 (f₁ f₂ : ZMod (p^(2*α)) → ℂ) (g₁ g₂ : ℤ 
       (UnitEquivUnitProdZMod hp hα).invFun ((UnitEquivUnitProdZMod hp hα).toFun a)
     
     simp only [Equiv.toFun_as_coe_apply]
-
-
 
     exact (UnitEquivUnitProdZMod hp hα).toFun a
     rw [(UnitEquivUnitProdZMod hp hα).toFun a]
@@ -1460,6 +1531,8 @@ def ZMod_sol_hFunc_v2 (x y : ℤ) : Finset (ZMod (p ^ α))ˣ :=
   -- {r ∈ (ZMod (p^α : ℕ)) }.filter (map_sol_hFunc_v2 z χ ψ hp f₁ f₀ g₁ g₀ x y)
   
 -- (ZMod (p^α))ˣ x {1}
+/-
+Previous version
 -- not applicable to the below theorems
 theorem Sum_into_two_sums (f : ZMod (p^(2*α)) → ℂ) (g : ℤ → ZMod (p^(2*α))) [NeZero (p^α : ℕ)] (hα : 0 < α) :
     ∑ x : (ZMod (p^(2*α)))ˣ, f (g x) = ∑ y : ((ZMod (p^α))ˣ), ∑ z : (ZMod (p^α : ℕ)), f (g (y + z * (p^α : ℕ))) := by
@@ -1467,6 +1540,7 @@ theorem Sum_into_two_sums (f : ZMod (p^(2*α)) → ℂ) (g : ℤ → ZMod (p^(2*
   -- Finset.sum_product'
   rw [Finset.sum_finset_product]
   simp only [Finset.mem_univ, and_self, Prod.forall, forall_const]
+-/
 
 theorem Sum_into_two_sums_v2 (f₁ f₂ : ZMod (p^(2*α)) → ℂ) (g₁ g₂ : ℤ → ZMod (p^(2*α))) [NeZero (p^α : ℕ)] (hα : 0 < α) :
     ∑ x : (ZMod (p^(2*α)))ˣ, f₁ (g₁ x) * f₂ (g₂ x) = ∑ y : ((ZMod (p^α))ˣ), ∑ z : (ZMod (p^α : ℕ)), f₁ (g₁ (y + z * (p^α : ℕ))) * f₂ (g₂ (y + z * (p^α : ℕ))) := by
@@ -1475,12 +1549,64 @@ theorem Sum_into_two_sums_v2 (f₁ f₂ : ZMod (p^(2*α)) → ℂ) (g₁ g₂ : 
   rw [Finset.sum_finset_product]
   simp only [Finset.mem_univ, and_self, Prod.forall, forall_const]
 
+instance (a b : ZMod (p^(2*α))) : 1 + a = 1 + b ↔ a = b := by exact add_right_inj 1
+
 /- for the latter lemma -/
 lemma MulChar_ZMod_twoPow_coe_onePow (p : ℕ) (hp : Prime p) (α : ℕ) (z : ZMod (p^(2*α) : ℕ)) (χ : MulChar (ZMod (p^(2*α) : ℕ)) ℂ) [NeZero (p^α)]:
     χ' (χ) (z : ZMod (p^α)) = χ (1 + z * (p^α : ℕ)) := by
   rw [well_defined]
   apply congr_arg
   rw [ZMod.cast_eq_val]
+  rw [add_right_inj 1]
+  have H : NeZero (p ^ (2 * α)) := by sorry
+  rw [ZMod.cast_eq_val]
+  rw [ZMod.val_nat_cast]
+  have val_remainder_lt : z.val % p ^ α < p ^ α
+  { rw [← ZMod.val_nat_cast]
+    exact ZMod.val_lt (ZMod.val z : ZMod (p ^ α)) }
+  have bruh : z.val % p ^ α ≡ z.val [MOD p ^ α]
+  {
+    exact Nat.mod_modEq (ZMod.val z) (p ^ α)
+  }
+  have bruh3 : ∃(c : ℕ), z.val = z.val % p ^ α + c * (p ^ α)
+  { exact exists_eq_nat_coe_mod_eq
+
+  
+    exact Nat.exists_eq_add_of_le
+  }
+
+
+
+
+  have ugh : z.val % p ^ α ≤ z.val := by exact Nat.mod_le (ZMod.val z) (p ^ α)
+  have hhhh (ew : z.val % p ^ α ≤ z.val ): ∃(c : ℕ), z.val = z.val % p ^ α + c * (p ^ α)
+  {
+    exact?
+  }
+  -- nat.exists_eq_add_of_le
+  -- rw [ZMod.cast_sub']
+
+
+
+
+
+
+
+
+  have HHH : ∃(c : ℕ), z = (z.val % p ^ α : ZMod (p ^ (2*α))) + (c : ZMod (p ^ (2*α))) * (p ^ α : ZMod (p ^ (2*α)))
+  { 
+    sorry
+  }
+  sorry
+
+
+
+
+  /- previous version
+  rw [well_defined]
+  apply congr_arg
+  rw [ZMod.cast_eq_val]
+  rw [add_right_inj 1]
   -- doesn't matter whether (c : ℕ) or (c : ℤ)
   have H : ∃(c : ℕ), z = ((z : ZMod (p ^ α)).val : ZMod (p ^ (2*α))) + (c : ZMod (p ^ (2*α))) * (p ^ α : ZMod (p ^ (2*α)))
   { have : NeZero (p^(2*α)) := by exact NeZero_pPow hp
@@ -1489,7 +1615,7 @@ lemma MulChar_ZMod_twoPow_coe_onePow (p : ℕ) (hp : Prime p) (α : ℕ) (z : ZM
     norm_cast
     have hahah : ∃(c₁ : ℕ), (z : ℤ) = ((z : ZMod (p ^ α)) : ℤ) + ((c₁ * p ^ α : ℕ) : ℤ)
     { simp only [Nat.cast_mul]
-
+      
       -- rw [ZMod.int_coe_zmod_eq_iff]
       sorry
     }
@@ -1518,6 +1644,7 @@ lemma MulChar_ZMod_twoPow_coe_onePow (p : ℕ) (hp : Prime p) (α : ℕ) (z : ZM
   rw [← Nat.cast_pow p (2 * α)]
   rw [ZMod.nat_cast_self]
   ring
+  -/ 
 
 /- previous version
 /- this proof is awfully slow. Needed to change the maxHeartbeats -/
@@ -1751,8 +1878,6 @@ lemma int_coe_val_dvd_iff_eq_zero (q : ℕ) (m : ZMod q) [NeZero q] :
     use 0
     rfl
 -/
-
-instance (a b c : ℂ) (h : b ≠ 0) : a = c * b ↔ b ∣ a := by sorry
 
 lemma eZMod_orthogonality (m : ZMod (p^α)) [NeZero (p^α)] : 
     ∑ z : ZMod (p ^ α), eZMod (p^α : ℕ) (m * z) = if m = 0 then (p^α : ℂ) else (0 : ℂ) := by

@@ -25,7 +25,7 @@ example (a : ℤ) : a / 0 = 0 := by exact Int.ediv_zero a
 -- probably need to delete this later 
 lemma intToComplex (r : ℤ) : ((r : ℝ) : ℂ) = r := by rfl
 
-lemma bar (a b : ℕ) (q : ℕ) (hq : q ≠ 0) (ha : a < q) (hab : a ≡ b [MOD q]) :
+lemma exists_eq_nat_coe_mod_eq (a b : ℕ) (q : ℕ) (ha : a < q) (hab : a ≡ b [MOD q]) :
     ∃ n, b = a + n * q := by
   simp [Nat.ModEq] at hab
   rw [Nat.mod_eq_of_lt ha] at hab
@@ -35,7 +35,7 @@ lemma bar (a b : ℕ) (q : ℕ) (hq : q ≠ 0) (ha : a < q) (hab : a ≡ b [MOD 
 
 lemma foo (a b : ℕ) (q : ℕ) (hq : q ≠ 0) (ha : a < q) (hb : b < q + q)
     (hcong : a ≡ b [MOD q]) : b = a ∨ b = a + q := by
-  obtain ⟨n, hn⟩ := bar a b q hq ha hcong
+  obtain ⟨n, hn⟩ := exists_eq_nat_coe_mod_eq a b q ha hcong
   rcases n with (rfl | rfl | n)
   · left
     simpa using hn

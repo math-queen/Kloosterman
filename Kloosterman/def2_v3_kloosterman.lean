@@ -25,7 +25,7 @@ example (a : ℤ) : a / 0 = 0 := by exact Int.ediv_zero a
 -- probably need to delete this later 
 lemma intToComplex (r : ℤ) : ((r : ℝ) : ℂ) = r := by rfl
 
-lemma exists_eq_nat_coe_mod_eq (a b : ℕ) (q : ℕ) (ha : a < q) (hab : a ≡ b [MOD q]) :
+lemma exists_eq_of_nat_coe_mod_eq (a b : ℕ) (q : ℕ) (ha : a < q) (hab : a ≡ b [MOD q]) :
     ∃ n, b = a + n * q := by
   simp [Nat.ModEq] at hab
   rw [Nat.mod_eq_of_lt ha] at hab
@@ -35,7 +35,7 @@ lemma exists_eq_nat_coe_mod_eq (a b : ℕ) (q : ℕ) (ha : a < q) (hab : a ≡ b
 
 lemma foo (a b : ℕ) (q : ℕ) (hq : q ≠ 0) (ha : a < q) (hb : b < q + q)
     (hcong : a ≡ b [MOD q]) : b = a ∨ b = a + q := by
-  obtain ⟨n, hn⟩ := exists_eq_nat_coe_mod_eq a b q ha hcong
+  obtain ⟨n, hn⟩ := exists_eq_of_nat_coe_mod_eq a b q ha hcong
   rcases n with (rfl | rfl | n)
   · left
     simpa using hn
@@ -167,7 +167,6 @@ theorem metamorphosis {q : ℕ} (a : ℤ) (b : ℤ) (haq : ((a : ZMod q).val).gc
   cases' a_toUnitZmod with a' congr_a
   have b_toUnitZmod := congr_IntToUnitZMod b hbq
   cases' b_toUnitZmod with b' congr_b
-  
   rw [congr_eq_kloostermanSum a b a' b' q]
   rw [congr_eq_kloostermanSum 1 (a*b) 1 (a'*b') q]
   simp only [kloostermanSum]

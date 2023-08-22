@@ -2167,8 +2167,8 @@ lemma double_sum_in_deriv_and_exp [NeZero (p^α : ℕ)] (hα : 0 < α) (f₀_at_
     apply congr_arg
     funext z
     -- if I let MulChar_in_y_and_z eat all of its variables, times out
-    rw [MulChar_in_y_and_z z χ f₁ f₀ (((y : ZMod (p^α)) : ℤ) + (z : ℤ) * (p ^ α : ℤ)) ((y : ZMod (p^α)) : ℤ) rfl (f₀_at_xIsUnit (↑↑y + ↑z * ↑(p ^ α))) (rationalFunc_at_y_isunit ↑↑y)]
-    · rw [AddChar_in_y_and_z z ψ g₁ g₀ (((y : ZMod (p^α)) : ℤ) + (z : ℤ) * (p ^ α : ℤ)) ((y : ZMod (p^α)) : ℤ) rfl (g₀_at_xIsUnit (↑↑y + ↑z * ↑(p ^ α)))]
+    rw [MulChar_in_y_and_z z χ hp f₁ f₀ (((y : ZMod (p^α)) : ℤ) + (z : ℤ) * (p ^ α : ℤ)) ((y : ZMod (p^α)) : ℤ) rfl (f₀_at_xIsUnit (↑↑y + ↑z * ↑(p ^ α))) (rationalFunc_at_y_isunit ↑↑y)]
+    · rw [AddChar_in_y_and_z z ψ hp g₁ g₀ (((y : ZMod (p^α)) : ℤ) + (z : ℤ) * (p ^ α : ℤ)) ((y : ZMod (p^α)) : ℤ) rfl (g₀_at_xIsUnit (↑↑y + ↑z * ↑(p ^ α)))]
       · rw [(AddChar_eq_exp_a_spec z ψ hp g₁ g₀ ↑↑y).right]
         rw [← MulChar_ZMod_twoPow_coe_onePow p hp α (rationalFunc_deriv f₁ f₀ (↑↑y) (p ^ (2 * α)) * (rationalFunc f₁ f₀ (↑↑y) (p ^ (2 * α)))⁻¹ * (z : ZMod (p^(2*α)))) χ]
         rw [mul_assoc (rationalFunc_deriv f₁ f₀ (↑↑y) (p ^ (2 * α)))]
@@ -2181,10 +2181,12 @@ lemma double_sum_in_deriv_and_exp [NeZero (p^α : ℕ)] (hα : 0 < α) (f₀_at_
       · exact H₀Forg₀ ↑↑y
       · exact support_le_H₁Forg₁ ↑↑y
       · exact support_le_H₀Forg₀ ↑↑y
+      · exact hα
     · exact H₁Forf₁ ↑↑y
     · exact H₀Forf₀ ↑↑y
     · exact support_le_H₁Forf₁ ↑↑y
     · exact support_le_H₀Forf₀ ↑↑y
+    · exact hα
 
 /- separated this proof out from the previous theorem because it times out -/
 theorem double_sum_in_deriv_and_exp_after_rearrang [NeZero (p^α : ℕ)] (hα : 0 < α) (f₀_at_xIsUnit : ∀(x : ℤ), IsUnit ((f₀.eval x : ℤ) : ZMod (p^(2*α)))) (rationalFunc_at_y_isunit : ∀(y : ℤ), IsUnit (rationalFunc (f₁) (f₀) (y) (p^(2*α)) : ZMod (p^(2*α))))

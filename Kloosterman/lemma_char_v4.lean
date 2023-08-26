@@ -178,8 +178,9 @@ lemma complex_pow (n : ℕ) (a : ℂ) (b : ℂ) : a = b → a^n = b^n := by
 
 -- need to decide how to capitalize it
 -- need to show that `χ' (χ) (z)` is equal to a root of unity
+/- I don't think I need this anymore -/
 theorem MulChar_additive_eq_exp (p : ℕ) (hp : Prime p) (α : ℕ) (z : ZMod (p^α : ℕ)) (χ : MulChar (ZMod (p^(2*α) : ℕ)) ℂ) :
-    ∃(b : ℕ), b < p^α ∧ χ' (χ) (z) = eZMod (p^α : ℕ) (b*z) := by
+    ∃(b : ℕ), b < p ^ α ∧ χ' (χ) (z) = eZMod (p^α : ℕ) (b*z) := by
   have : NeZero (p^α) := ⟨pow_ne_zero α <| Prime.ne_zero hp⟩
   rw [← MulChar_additive_pow_val]
   have newExpression : ∃(ζ : ℂˣ), (ζ : ℂˣ) = (χ' (χ) (1) : ℂ)

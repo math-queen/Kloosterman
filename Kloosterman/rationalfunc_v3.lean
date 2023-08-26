@@ -14,31 +14,21 @@ noncomputable section
 
 /- # Note
 We have to keep the variables `x` `y` as `ℤ` for the following theorems w.r.t taylor series
-When dealing with Kloosterman sum, I think we have to coerce the variables from ZMod q to ℤ 
+When dealing with Kloosterman sum, we will have to coerce the variable we're summing over rom ZMod q or (ZMod q)ˣ to ℤ 
+Keep in mind 
 when using the theorems for the taylor series and Kloosterman sum at the same time 
 -/
 
 variable {p : ℕ} {α : ℕ} (z : ZMod (p^α : ℕ)) (χ : MulChar (ZMod (p^(2*α) : ℕ)) ℂ) (ψ : AddChar (ZMod (p^(2*α) : ℕ)) ℂ) [NeZero (p^(2*α) : ℕ)] [NeZero (p^α : ℕ)] (hp : Prime p)
 -- (q : ℕ) (x : ZMod q) (y : ℤ) (z : ZMod q)
 
-variable (f₁ f₀ g₁ g₀ : Polynomial ℤ)
+variable (f₁ f₀ g₁ g₀ : Polynomial ℤ) (hα : 0 < α)
 
 -- the denom is not equal to zero by the theorem `Ratfunc.denom_ne_zero`
 -- numerator and denominator are coprime by the theorem `Ratfunc.is_coprime_num_denom`
 
 -- f.denom.eval x ≠ 0 
 -- RatFunc (ZMod q)ˣ doesn't work
-
-
-/-
-def poly_eval_ZMod (p₀ : Polynomial ℤ) (x₀ : ℤ) (q : ℕ) : ZMod q :=
-  let r := p₀.eval x₀
-  (r : ZMod q)
-
-  -- my answer: use `((p₀.eval x : ℤ) : ZMod (p^(2*α)))` instead 
-
--/ 
-
 
 /- 
 we need `.eval` because we're trying to evaluate the function f at specific value x
@@ -70,11 +60,6 @@ theorem poly_taylor (p₀ : Polynomial ℤ) (y : ℤ) :
   -- have H := taylor_coeff_one (y) (p₀)
   exact Eq.symm (sum_taylor_eq p₀ y)
 
--- consider whether to have z : ℤ instead of (ZMod q)ˣ
--- is this statement even true? 
--- polynomial.eval_geom_sum
--- eval_finset_sum
-
 /- note to myself 
 By definition, 
 `((taylor y p₀).sum fun i a => a * ((z : ℤ) * (p^α : ℕ)) ^ i)`
@@ -91,34 +76,6 @@ theorem poly_taylor_eval (p₀ : Polynomial ℤ) (x y : ℤ) (h : x = y + z * (p
   rfl
   -- rw [Polynomial.eval_C]
   -- rw [Polynomial.eval_X]
-
-/- Proves that 
-p₁ (x) ≡ p₁ (y) + p₁' (y) *z*p^α [ZMOD (p^(2*α))]
-
-p₁.eval x ≡ p₁.eval y + (p₁.derivative.eval y) * z * (p^α) [ZMOD (p^(2*α))]
--/
-
-
-/- expressed only as a sum 
-idea : calculate the first two terms of the lhs and cancel them out with the terms on the rhs
-Then we can sum the variable over the Finset ℕ instead of Finset ℤ 
-
-potential solution 1 : maybe use erase and insert or filter
-  note: insert recognizes the set as Finset ℕ as long as the element inserted is : ℕ 
-
-potential solution 2 : I think it's better to just add 2 to every element in `(taylor y p₀).support`
-which should be possible since Finset is constructed in a way that it enumerates all its elements 
-
-potential solution 3: maybe use def `list.to_finset` and def `finset.to_list`
-We need to create a list which has the elements of `(taylor y p₀).support` and add 2 to them. 
-Then create the Finset ℕ from the list with elements + 2
-
-
-list.modify_nth_tail
-list.lookmap
-list.of_fn  -- Nope
-list.map_with_prefix_suffix
--/
 
 /- # List
 def support_add (i : ℕ) (x₀ : ℤ) (p₀ : Polynomial ℤ) : Finset ℕ :=
@@ -199,12 +156,8 @@ lemma poly_taylor_eval_term_by_term (p₀ : Polynomial ℤ) (x y : ℤ) (H : (ta
         repeat rw [Finset.union_sdiff_cancel_left]
         · rw [mul_assoc]
           rw [add_assoc]
-        · simp only [Finset.mem_range, add_pos_iff, or_true, not_true, mem_sdiff, lt_add_iff_pos_left, and_true,
-          not_lt, nonpos_iff_eq_zero, union_sdiff_self_eq_union, Finset.disjoint_union_right,
-          Finset.disjoint_singleton_left, and_false, not_false_eq_true, and_self]
-        · simp only [Finset.mem_range, add_pos_iff, or_true, not_true, mem_sdiff, lt_add_iff_pos_left, and_true,
-          not_lt, nonpos_iff_eq_zero, union_sdiff_self_eq_union, Finset.disjoint_union_right,
-          Finset.disjoint_singleton_left, and_false, not_false_eq_true, and_self]
+        · simp
+        · simp
         -- rw [Finset.union_sdiff_cancel_left (s := {0}) (t := {1})]
       · simp only [Finset.mem_range, add_pos_iff, or_true, not_true, mem_sdiff, lt_add_iff_pos_left, and_true, not_lt,
         nonpos_iff_eq_zero, Finset.disjoint_singleton_left, and_false, not_false_eq_true]
@@ -215,48 +168,6 @@ lemma poly_taylor_eval_term_by_term (p₀ : Polynomial ℤ) (x y : ℤ) (H : (ta
       and_false, not_false_eq_true]
   · simp only [Finset.singleton_subset_iff, Finset.mem_range, add_pos_iff, or_true]
   -- ends the calculation for the first term
-  
-
-
-
--- section SumTaylorSeries
-
-  /-
-  have H : (Finset.range ((taylor y p₀).support.max' H + 1) \ {0}) = {1} ∪ ((Finset.range ((taylor y p₀).support.max' H + 1) \ {0}) \ {1}) := by
-    rw [Finset.union_sdiff_of_subset]
-    simp only [Finset.mem_range, add_pos_iff, or_true, not_true, Finset.singleton_subset_iff, mem_sdiff,
-      lt_add_iff_pos_left, and_true]
-    exact support_le
-  -/
-
-
-  -- apply Finset.sum_bij (s := (taylor y p₀).support) (fun i _ ↦ i)
-
-/- first version
-lemma Nat.lt_right_cancel (a₁ a₂ a₃ : ℕ) (h : a₃ > a₂) : a₁ < a₃ → a₁ - a₂ < a₃ - a₂ := by 
-  intro ha₁_lt_ha₃
-  obtain (ha_lt | ha_le) := lt_or_le 0 (a₁ - a₂)
-  · apply Nat.lt_of_add_lt_add_right (b := a₂)
-    -- simp only [tsub_pos_iff_lt] at ha_lt 
-    rw [tsub_pos_iff_lt] at ha_lt
-    have ha_le := Nat.le_of_lt ha_lt
-    -- have ha₁_le_ha₃ := Nat.le_of_lt ha₁_lt_ha₃
-    rw [Nat.sub_add_cancel ha_le]
-    have h_le := Nat.le_of_lt h
-    rw [Nat.sub_add_cancel h_le]
-    linarith
-  · rw [Nat.le_zero] at ha_le
-    rw [ha_le]
-    exact Nat.sub_pos_of_lt h
--/
-
-/- lemma we don't need anymore
-lemma h₂Andh₃ (a : ℕ): a ≥ 1 ∧ (a < 1 ∨ a > 1) → a ≥ 2 := by
-  choose _ ha
-  cases' ha with _ a_lt_one
-  · linarith
-  · exact a_lt_one
--/
 
 /- for the lemma `sum_move_two` -/
 lemma Nat.lt_right_cancel (a₁ a₂ a₃ : ℕ) (h : a₃ > a₂) : a₁ < a₃ → a₁ - a₂ < a₃ - a₂ := by 
@@ -297,7 +208,7 @@ lemma aLargerTwo (p₀ : Polynomial ℤ) (y : ℤ) (H : (taylor y p₀).support.
     · exact a_lt_one  }
   exact h₂Andh₃ ⟨h₂, h₃⟩
 
-lemma sum_move_two (p₀ : Polynomial ℤ) (x y : ℤ) (H : (taylor y p₀).support.Nonempty) (support_lt : (taylor y p₀).support.max' H > 0) (h : x = y + z * (p^α : ℕ)) : 
+lemma sum_move_two (p₀ : Polynomial ℤ) (y : ℤ) (H : (taylor y p₀).support.Nonempty) : 
     ∑ i in (Finset.range ((taylor y p₀).support.max' H + 1) \ {0}) \ {1}, ((taylor y p₀).coeff i * ((z : ℤ) * (p^α : ℕ)) ^ i)
     = ∑ i in Finset.range ((taylor y p₀).support.max' H - 1), ((taylor y p₀).coeff (i+2) * ((z : ℤ) * (p^α : ℕ)) ^ (i+2)) := by
   apply Finset.sum_bij (fun i _ ↦ i - 2)
@@ -331,15 +242,15 @@ lemma sum_move_two (p₀ : Polynomial ℤ) (x y : ℤ) (H : (taylor y p₀).supp
       · rw [not_mem_singleton]
         exact Nat.succ_succ_ne_one b  }
     use hb_two
-    exact rfl
+    rfl
 
 -- once we convert the sum into Finset.range, then we can use the theorem `finset.sum_cons` or `finset.sum_disj_union` to sort this out
 
-lemma sum_higher_terms_in_poly (p₀ : Polynomial ℤ) (x y : ℤ) (H : (taylor y p₀).support.Nonempty) (support_le : (taylor y p₀).support.max' H > 0) (h : x = y + z * (p^α : ℕ)) : 
+lemma sum_higher_terms_in_poly (p₀ : Polynomial ℤ) (y : ℤ) (H : (taylor y p₀).support.Nonempty) : 
     ∃(z₀ : ℤ), (p^(2*α) : ℕ) * z₀
     = ∑ i in (Finset.range ((taylor y p₀).support.max' H + 1) \ {0}) \ {1}, ((taylor y p₀).coeff i * ((z : ℤ) * (p^α : ℕ)) ^ i) := by
   -- rcases (taylor y p₀).support.max' H > 1 
-  rw [sum_move_two z p₀ x y H support_le h]
+  rw [sum_move_two z p₀ y H]
   use ∑ i in Finset.range ((taylor y p₀).support.max' H - 1), ((taylor y p₀).coeff (i+2) * (z : ℤ) ^ (i + 2) * ((p^α : ℕ) ^ i : ℤ))
   rw [mul_comm]
   rw [Finset.sum_mul]
@@ -353,20 +264,10 @@ lemma sum_higher_terms_in_poly (p₀ : Polynomial ℤ) (x y : ℤ) (H : (taylor 
   rw [mul_pow]
   rw [mul_assoc]
 
-/- previous version
-theorem poly_taylor_eval_ZMod (p₀ : Polynomial ℤ) (x y : ℤ) (H : (taylor y p₀).support.Nonempty) (support_le : (taylor y p₀).support.max' H > 0) (h : x = y + z * (p^α : ℕ)) :
-    p₀.eval x ≡ p₀.eval y + ((Polynomial.derivative (R := ℤ)) p₀).eval y * z * (p^α : ℕ) [ZMOD (p^(2*α))] := by
-  rw [poly_taylor_eval_term_by_term z p₀ x y H support_le h]
-  have hz := sum_higher_terms_in_poly z p₀ x y H support_le h
-  cases' hz with z₀ hz₀
-  rw [← hz₀]
-  exact modEq_add_fac z₀ rfl
--/ 
-
 theorem poly_taylor_eval_ZMod (p₀ : Polynomial ℤ) (x y : ℤ) (H : (taylor y p₀).support.Nonempty) (support_le : (taylor y p₀).support.max' H > 0) (h : x = y + z * (p^α : ℕ)) :
     ((p₀.eval x : ℤ) : ZMod (p^(2*α))) = ((p₀.eval y + ((Polynomial.derivative (R := ℤ)) p₀).eval y * z * (p^α : ℕ) : ℤ) : ZMod (p^(2*α))) := by
   rw [poly_taylor_eval_term_by_term z p₀ x y H support_le h]
-  have hz := sum_higher_terms_in_poly z p₀ x y H support_le h
+  have hz := sum_higher_terms_in_poly z p₀ y H 
   cases' hz with z₀ hz₀
   rw [← hz₀]
   rw [cast_add]
@@ -375,24 +276,6 @@ theorem poly_taylor_eval_ZMod (p₀ : Polynomial ℤ) (x y : ℤ) (H : (taylor y
   rw [ZMod.nat_cast_self]
   rw [zero_mul]
   rw [add_zero]
-
-/-
--- be extra careful with how you state this theorem
-theorem RatFunc_eq_num_denom_ZMod (x y : ℤ) (h : x = y + z * (p^α : ℕ)) (H : r = p₂.eval x):
-    1 ≡ p₁.eval x * ((p₂.eval x) : ZMod (p^α))⁻¹ [ZMOD (p^(2*α))] := by
-  field_simp
-  sorry
--/
-
-/- previous version 
-theorem rationalFunc_well_defined_ZMod (x y : ℤ) {h : x = y + z * (p^α : ℕ)} :
-    rationalFunc (p₁) (p₀) (x) (p^(2*α)) ≡ 
-    (p₁.eval y + ((Polynomial.derivative (R := ℤ)) p₁).eval y * z * (p^α : ℕ)) 
-    * ((p₀.eval y + ((Polynomial.derivative (R := ℤ)) p₀).eval y * z * (p^α : ℕ)) : ZMod (p^(2*α)))⁻¹ [ZMOD (p^(2*α))] := by
-  simp only [rationalFunc]
-  rw [poly_taylor_eval_ZMod p₁ x y]
-  sorry
--/
 
 variable (p₁ p₀ : Polynomial ℤ)
 
@@ -405,12 +288,6 @@ theorem rationalFunc_well_defined_ZMod (x y : ℤ) (H₁ : (taylor y p₁).suppo
   rw [poly_taylor_eval_ZMod z p₀ x y H₀ support_le_H₀ h]
   push_cast
   simp
-
-/- Previous version
-lemma rationalFunc_eq_ZMod (p₁ p₀ : Polynomial ℤ) (x y : ℤ) (h : x = y + z * (p^α : ℕ)) :
-    rationalFunc (p₁) (p₀) (x) (p^(2*α)) ≡ rationalFunc (p₁) (p₀) (y) (p^(2*α)) 
-    + (rationalFunc_deriv (p₁) (p₀) (y) (p^(2*α))) * z * (p^α : ℕ) [ZMOD (p^(2*α))] := by
--/
 
 /- corollary of theorem `poly_taylor_eval_ZMod` -/
 
@@ -432,65 +309,6 @@ lemma poly_zmod_prime_ofPrimePow (a b : ℤ) (hα : 0 < α) (h : (a : ZMod (p^α
 
 lemma NeZero_pPow : NeZero (p^(2*α)) := ⟨pow_ne_zero (2*α) <| Prime.ne_zero hp⟩
 
-/- previous attempts
-lemma ughhh (p₀ : Polynomial ℤ) (b y : ℤ) (hα : 0 < α) (ha : ∃ a, (b : ZMod p) * a = 1) : 
-    ∃ a, (b : ZMod (p^(2*α))) * a = 1 := by 
-  
-  -- zmod.mul_inv_eq_gcd 
-  -- rw [← isUnit_iff_exists_inv] at ha
-  -- rw [← isCoprime_zero_left] at ha
-  -- rw [Irreducible.coprime_iff_not_dvd] at ha
-
-  -- int.mod_coprime
-  -- int.gcd_eq_one_iff_coprime
-  cases' ha with a ha
-  use a.val
-  sorry
-
-lemma bruh (p₀ : Polynomial ℤ) (a y : ℤ) (hα : 0 < α) : 
-    IsCoprime (p : ℤ) a ↔ IsUnit (a : ZMod (p^(2*α))) := by
-  constructor
-  · rw [← Int.gcd_eq_one_iff_coprime]
-
-    rw [Prime.coprime_iff_not_dvd]
-    · -- intro hNep
-      intro hNep
-      
-      rw [Int.mod_coprime]
-      -- rw [Int.mod_coprime]
-      rw [← isCoprime_zero_left]
-
-      
-      intro hNep
-      by_contra
-      contrapose!
-      intro _
-      
-      -- by_contra
-
-      sorry
-    · rw [Int.prime_iff_natAbs_prime]
-      exact Iff.mpr Nat.prime_iff hp
-  · intro ha
-
-    sorry
-  -- int.mod_coprime
-  -- int.gcd_eq_one_iff_coprime
-  -- irreducible.coprime_pow_of_not_dvd 
-
-lemma ugh (p₀ : Polynomial ℤ) (a y : ℤ) (hα : 0 < α) : 
-    ¬ (a : ZMod p) = 0 ↔ IsUnit (a : ZMod (p^(2*α))) := by
-  constructor
-  · -- rw [← Int.gcd_eq_one_iff_coprime]
-    sorry
-
-  · sorry
-  -- int.mod_coprime
-  -- int.gcd_eq_one_iff_coprime
-  -- irreducible.coprime_pow_of_not_dvd
-
--/ 
-
 /- think about how to incorporate this into the proof for the lemma `nat_gcd_ZMod_prime_eq_one_iff_ZMod_primePow` -/
 lemma nat_gcd_prime_eq_one_iff_primePow (a : ℤ) (hα : 0 < α) : 
     Nat.gcd ((a : ZMod (p^(2*α))).val) (p ^ (2 * α)) = 1 ↔ Nat.gcd (a : ZMod (p^(2*α))).val p = 1 := by
@@ -506,59 +324,6 @@ lemma nat_val_congr_self (n q : ℕ) [NeZero q] : (n : ZMod q).val ≡ n [ZMOD q
 lemma int_val_congr_self (n : ℤ) (q : ℕ) [NeZero q] : (n : ZMod q).val ≡ n [ZMOD q] := by
   rw [← ZMod.int_cast_eq_int_cast_iff]
   simp only [ZMod.nat_cast_val, ZMod.int_cast_cast, ZMod.cast_int_cast']
-
-/- previous version
-/- got absorbed to the lemma `val_congr_self_zmod_prime_congr_primePow'` -/
-lemma val_congr_self_zmod_prime_congr_primePow (a : ℤ) (hα : 0 < α) [NeZero (p^α)]: ((a : ZMod (p^α)).val) ≡ (a : ZMod p).val [ZMOD p] := by 
-  have : NeZero p := by exact { out := Prime.ne_zero hp }
-  apply Int.ModEq.trans (b := a) _ (ModEq.symm (int_val_congr_self a p))
-  apply Int.ModEq.of_mul_left (p^(α - 1))
-  rw [← Nat.cast_mul (p ^ (α -1)) p]
-  nth_rw 2 [← pow_one p]
-  rw [← pow_add]
-  rw [Nat.sub_add_cancel hα]
-  exact int_val_congr_self a (p ^ α)
-
-/- got absorbed to the lemma `val_congr_self_mod_prime_congr_primePow` -/
-lemma val_congr_self_zmod_prime_congr_primePow' (a : ℤ) (hα : 0 < α) [NeZero (p^α)]: 
-    ((a : ZMod (p^α)).val : ZMod p) = ((a : ZMod p).val : ZMod p) := by 
-  -- have : (((a : ZMod (p^α)).val : ℤ) : ZMod p) = (((a : ZMod p).val : ℤ) : ZMod p) := by sorry
-  -- simp only [ZMod.nat_cast_val, ZMod.int_cast_cast, cast_ofNat] at this 
-  rw [← cast_ofNat]
-  rw [← cast_ofNat (a : ZMod p).val]
-  have : NeZero p := by exact { out := Prime.ne_zero hp }
-  rw [ZMod.int_cast_eq_int_cast_iff ((a : ZMod (p^α)).val) ((a : ZMod p).val) p]
-  apply Int.ModEq.trans (b := a) _ (ModEq.symm (int_val_congr_self a p))
-  apply Int.ModEq.of_mul_left (p^(α - 1))
-  rw [← Nat.cast_mul (p ^ (α -1)) p]
-  nth_rw 2 [← pow_one p]
-  rw [← pow_add]
-  rw [Nat.sub_add_cancel hα]
-  exact int_val_congr_self a (p ^ α)
--/
-
-
-/- previous version 
--- for `[MOD p]`
-lemma val_congr_self_mod_prime_congr_primePow (a : ℤ) (hα : 0 < α) [NeZero (p^α)]: 
-    (a : ZMod (p^α)).val ≡ (a : ZMod p).val [MOD p] := by 
-  -- have : (((a : ZMod (p^α)).val : ℤ) : ZMod p) = (((a : ZMod p).val : ℤ) : ZMod p) := by sorry
-  -- simp only [ZMod.nat_cast_val, ZMod.int_cast_cast, cast_ofNat] at this
-  suffices ((a : ZMod (p^α)).val : ZMod p) = ((a : ZMod p).val : ZMod p) by
-    rw [ZMod.eq_iff_modEq_nat] at this
-    exact this
-  rw [← cast_ofNat]
-  rw [← cast_ofNat (a : ZMod p).val]
-  have : NeZero p := by exact { out := Prime.ne_zero hp }
-  rw [ZMod.int_cast_eq_int_cast_iff ((a : ZMod (p^α)).val) ((a : ZMod p).val) p]
-  apply Int.ModEq.trans (b := a) _ (ModEq.symm (int_val_congr_self a p))
-  apply Int.ModEq.of_mul_left (p^(α - 1))
-  rw [← Nat.cast_mul (p ^ (α -1)) p]
-  nth_rw 2 [← pow_one p]
-  rw [← pow_add]
-  rw [Nat.sub_add_cancel hα]
-  exact int_val_congr_self a (p ^ α)
--/ 
 
 /- for `[MOD p]` -/
 lemma val_congr_self_mod_prime_congr_primePow (a : ℤ) (hα : 0 < α) [NeZero (p^α)]: 
@@ -594,19 +359,6 @@ lemma nat_gcd_ZMod_prime_eq_one_iff_ZMod_primePow (a : ℤ) (hα : 0 < α) :
   cases' hexists with c hcexists
   rw [hcexists]
   exact (Nat.coprime_add_mul_right_left (a : ZMod p).val p c)
-
-/- previous version
-lemma nat_gcd_prime_eq_one_iff_primePow' (a : ℤ) (hα : 0 < α) : 
-    Nat.gcd ((a : ZMod (p^(2*α))).val) (p ^ (2 * α)) = 1 ↔ Nat.gcd (a : ZMod p).val p = 1 := by
-  have two_alpha_lt : 0 < 2 * α := by exact Nat.succ_mul_pos 1 hα
-  rw [nat_gcd_prime_eq_one_iff_primePow a hα]
-  have : ((a : ZMod (p^(2*α))).val) ≡ (a : ZMod p).val [ZMOD p]
-  { 
-    sorry
-  }
-  
-  sorry
--/
 
 /- for the lemma `poly_at_yIsUnit` -/
 lemma NatSmallerZMod_Nat_eq (a b q : ℕ) (ha : a < q) (hb : b < q) (hab : (a : ZMod q) = (b : ZMod q)): a = b := by
@@ -652,9 +404,7 @@ lemma poly_at_yIsUnit (p₀ : Polynomial ℤ) (x y : ℤ) (H : (taylor y p₀).s
     · have := Nat.gcd_le_right (m := (((p₀.eval x : ℤ) : ZMod (p ^ (2 * α))).val)) (p ^ (2 * α)) pPowltZero
       exfalso
       have := lt_of_lt_of_le (c := p ^ (2 * α)) h₃ this
-      simp only [lt_self_iff_false] at this 
-    -- nat.gcd_le_right
-  }
+      simp only [lt_self_iff_false] at this }
   have poly_x_inv_gcd_prime := ZMod.mul_inv_eq_gcd ((p₀.eval x : ℤ) : ZMod p) 
   have val_x_pPow := NatSmallerZMod_Nat_eq (Nat.gcd (((p₀.eval x : ℤ) : ZMod (p ^ (2 * α))).val) (p ^ (2 * α))) 1 (p ^ (2 * α)) eval_at_x_val_lt (one_lt_twoprimePow hp hα) poly_x_inv_one_PrimePow
   rw [nat_gcd_ZMod_prime_eq_one_iff_ZMod_primePow hp (p₀.eval x) hα] at val_x_pPow
@@ -695,244 +445,12 @@ lemma poly_at_yIsUnit (p₀ : Polynomial ℤ) (x y : ℤ) (H : (taylor y p₀).s
     · have := Nat.gcd_le_right (m := (((p₀.eval y : ℤ) : ZMod p).val)) p hp_zero_lt
       exfalso
       have := lt_of_lt_of_le (c := p) h₃ this
-      simp only [lt_self_iff_false] at this 
-    -- nat.gcd_le_right
-  }
+      simp only [lt_self_iff_false] at this }
   have hp_one_lt : 1 < p := by exact Nat.Prime.one_lt nat_hp
   rw [← Nat.cast_one] at poly_y_inv_gcd_prime
   have poly_y_prime_gcd_eq_one := NatSmallerZMod_Nat_eq (Nat.gcd (((p₀.eval y : ℤ) : ZMod p).val) p) 1 p eval_at_y_val_lt hp_one_lt (Eq.symm poly_y_inv_gcd_prime)
   exact Iff.mpr (nat_gcd_ZMod_prime_eq_one_iff_ZMod_primePow hp (p₀.eval y) hα) poly_y_prime_gcd_eq_one
   done
-  
-/- previous version 1
-lemma poly_at_yIsUnit' (p₀ : Polynomial ℤ) (x y : ℤ) (H : (taylor y p₀).support.Nonempty) (support_le : (taylor y p₀).support.max' H > 0) (p₀_at_xIsUnit : IsUnit ((p₀.eval x : ℤ) : ZMod (p^(2*α)))) (h : x = y + z * (p^α : ℕ)) (hα : 0 < α): 
-    IsUnit ((p₀.eval y : ℤ) : ZMod (p^(2*α))) := by
-  -- by_contra NeUnit
-  rw [ZMod.val_coe_unit_coprime]
-  rw [isUnit_iff_exists_inv] at *
-  cases' p₀_at_xIsUnit with b hb
-  use b
-  -- rw [ZMod.val_coe_unit_coprime]
-
-  have poly_ZModPrimePow_eq := poly_taylor_eval_ZMod z p₀ x y H support_le h -- for `poly_ZModPrime`
-  have two_alpha_lt : 0 < 2 * α := by exact Nat.succ_mul_pos 1 hα -- for `poly_ZModPrime`
-  have poly_ZModPrime := poly_zmod_prime_ofPrimePow (α := 2 * α) (p₀.eval x) (p₀.eval y + ((Polynomial.derivative (R := ℤ)) p₀).eval y * z * (p^α : ℕ) : ℤ) two_alpha_lt poly_ZModPrimePow_eq
-  -- rw [← cast_zero] at hy
-  -- have eval_yZModPrime := poly_zmod_prime_ofPrimePow (α := 2 * α) (p₀.eval y) 0 two_alpha_lt this
-  rw [cast_add] at poly_ZModPrime
-  rw [mul_assoc] at poly_ZModPrime
-  rw [cast_mul] at poly_ZModPrime
-  rw [cast_mul] at poly_ZModPrime
-  rw [ZMod.int_cast_cast] at poly_ZModPrime
-  rw [Nat.cast_pow, cast_pow, cast_ofNat, CharP.cast_eq_zero] at poly_ZModPrime 
-  rw [zero_pow hα] at poly_ZModPrime 
-  rw [mul_zero] at poly_ZModPrime 
-  rw [mul_zero] at poly_ZModPrime 
-  rw [add_zero] at poly_ZModPrime 
-  -- rw [hy] at poly_ZModPrime
-
-  have : ¬ (p : ℤ) ∣ (p₀.eval y : ℤ) → ∃b, ((p₀.eval y : ℤ) : ZMod (p^(2*α))) * b = 1 
-  { contrapose!
-    intro hb
-  
-    sorry
-  }
-  
-  rw [← isCoprime_zero_left]
-  rw [Irreducible.coprime_iff_not_dvd]
-  · 
-    sorry
-  · exact?
-    sorry
-  · 
-    sorry
-  · sorry
-
-  /-
-  rw [isUnit_iff_forall_dvd]
-  have HH : ¬ (p : ℤ) ∣ (p₀.eval y : ℤ) → ∀(b : ZMod (p ^ (2 * α))), ((p₀.eval y : ℤ) : ZMod (p^(2*α))) ∣ b
-  { contrapose!
-    intro hb
-    cases' hb with b hb
-
-    sorry
-  }
-
-  -/
-  have : ¬ (p : ℤ) ∣ (p₀.eval y : ℤ)
-  { 
-    sorry
-  }
-  rw [isUnit_iff_exists_inv] at *
-  cases' p₀_at_xIsUnit with b hb
-
-  rw [← isCoprime_zero_left]
-  have : IsCoprime 0 ((p₀.eval y : ℤ) : ZMod (p^(2*α))) ↔ ¬ 
-
--/
-
-/- previous version 2 
-lemma poly_at_yIsUnit'' (p₀ : Polynomial ℤ) (x y : ℤ) (H : (taylor y p₀).support.Nonempty) (support_le : (taylor y p₀).support.max' H > 0) (p₀_at_xIsUnit : IsUnit ((p₀.eval x : ℤ) : ZMod (p^(2*α)))) (h : x = y + z * (p^α : ℕ)) (hα : 0 < α): 
-    IsUnit ((p₀.eval y : ℤ) : ZMod (p^(2*α))) := by
-  -- by_contra NeUnit
-  rw [← isCoprime_zero_left]
- 
-  -- apply Nat.Prime.coprime_pow_of_not_dvd hp
-  have HH : ¬ (((p₀.eval y : ℤ) : ZMod (p^(2*α))) : ZMod p) = 0 → IsCoprime 0 ((p₀.eval y : ℤ) : ZMod (p^(2*α)))
-  { 
-    /- might help the following: 
-    have not_zero := NeZero_pPow (α := α) hp
-    have : Fact (1 < p ^ (2 * α)) := by sorry
-    have bruhh : Nontrivial (ZMod (p ^ (2 * α))) := by exact ZMod.nontrivial (p ^ (2 * α))
-    have urghhhh := IsUnit.ne_zero p₀_at_xIsUnit
-    -/
-    sorry
-  }
-
-  have HHH : ¬ (((p₀.eval y : ℤ) : ZMod (p^(2*α))) : ZMod p) = 0 ↔ IsCoprime 0 ((p₀.eval y : ℤ) : ZMod (p^(2*α)))
-  { 
-    sorry
-  }
-  
-    -- rw [ZMod.int_cast_zmod_eq_zero_iff_dvd]
-  
-    -- zmod.int_coe_zmod_eq_zero_iff_dvd
-  apply HH
-  intro hy
-  have hα_two : 0 < 2 * α := by exact Nat.succ_mul_pos 1 hα
-  rw [Nat.pos_iff_ne_zero] at hα_two
-  have hp_dvd : p ∣ p ^ (2 * α) := by exact dvd_pow_self p hα_two
-  rw [ZMod.cast_int_cast hp_dvd (p₀.eval y)] at hy
-
-  have poly_ZModPrimePow_eq := poly_taylor_eval_ZMod z p₀ x y H support_le h -- for `poly_ZModPrime`
-  have two_alpha_lt : 0 < 2 * α := by exact Nat.succ_mul_pos 1 hα -- for `poly_ZModPrime`
-  have poly_ZModPrime := poly_zmod_prime_ofPrimePow (α := 2 * α) (p₀.eval x) (p₀.eval y + ((Polynomial.derivative (R := ℤ)) p₀).eval y * z * (p^α : ℕ) : ℤ) two_alpha_lt poly_ZModPrimePow_eq
-  rw [← cast_zero] at hy
-  -- have eval_yZModPrime := poly_zmod_prime_ofPrimePow (α := 2 * α) (p₀.eval y) 0 two_alpha_lt this
-  rw [cast_add] at poly_ZModPrime
-  rw [mul_assoc] at poly_ZModPrime
-  rw [cast_mul] at poly_ZModPrime
-  rw [cast_mul] at poly_ZModPrime
-  rw [ZMod.int_cast_cast] at poly_ZModPrime
-  rw [Nat.cast_pow, cast_pow, cast_ofNat, CharP.cast_eq_zero] at poly_ZModPrime 
-  rw [zero_pow hα] at poly_ZModPrime 
-  rw [mul_zero] at poly_ZModPrime 
-  rw [mul_zero] at poly_ZModPrime 
-  rw [add_zero] at poly_ZModPrime 
-  rw [hy] at poly_ZModPrime
-  
-  -- have : IsUnit ((eval x p₀ : ℤ) : ZMod (p ^ α)) → ¬ ((eval x p₀ : ℤ) : ZMod (p ^ α)) = 0 
-  have [NeZero p] [NeZero (p ^ α)] : IsUnit ((eval x p₀ : ℤ) : ZMod (p ^ α)) → IsUnit ((eval x p₀ : ℤ) : ZMod p)
-  { 
-    
-    -- need to show that it's coprime to (p ^ α)
-    -- then show that it's coprime to p
-    -- which is equivalent to the def of IsUnit 
-    sorry
-  }
-
-  /- need to show that `IsUnit ((eval x p₀) : ZMod (p ^ (2 * α))` implies that `¬ ((eval x p₀) : ZMod p) = 0` -/
-  have : IsUnit ((eval x p₀ : ℤ) : ZMod (p ^ α)) → ((eval x p₀ : ℤ) : ZMod (p)) ≠ 0 
-  { 
-    sorry
-  }
-
-  have not_zero := NeZero_pPow (α := α) hp
-  have : Fact (1 < p ^ (2 * α)) := by sorry
-  have bruhh : Nontrivial (ZMod (p ^ (2 * α))) := by exact ZMod.nontrivial (p ^ (2 * α))
-  have urghhhh := IsUnit.ne_zero p₀_at_xIsUnit
-
-  -- ((p₀.eval x : ℤ) : ZMod p) = ((p₀.eval y + ((Polynomial.derivative (R := ℤ)) p₀).eval y * z * (p^α : ℕ) : ℤ) : ZMod p) 
-
-  rw [cast_add] at poly_ZModPrimePow
-  rw [mul_assoc] at poly_ZModPrimePow
-  rw [cast_mul] at poly_ZModPrimePow
-  rw [cast_mul] at poly_ZModPrimePow
-  rw [ZMod.int_cast_cast] at poly_ZModPrimePow 
-  rw [cast_ofNat] at poly_ZModPrimePow
-
-  rw [hy] at poly_ZModPrimePow
-
-
-
-  -- p₀.eval x ≡ p₀.eval y + ((Polynomial.derivative (R := ℤ)) p₀).eval y * z * (p^α : ℕ)
-  have poly_ZModPrime : p₀.eval x ≡ p₀.eval y [ZMOD p]
-  { 
-      -- zmod.cast_add
-    sorry
-  }
-  rw [← ZMod.int_cast_eq_int_cast_iff] at poly_ZModPrime
-  
-  push_cast at poly_ZModPrime
-  -- rw [ZMod.cast_int_cast]
-  -- rw [← poly_ZModPrime]
-
-
-
-
-  /- 
-  -- by_contra NeUnit
-  rw [← isCoprime_zero_left]
-  have HH : ((poly_eval_ZMod p₀ y (p ^ (2 * α))) : ZMod p) = 0 → IsCoprime 0 (poly_eval_ZMod p₀ y (p ^ (2 * α))) := by
-    intro hy
-    
-    rw [ZMod.int_cast_zmod_eq_zero_iff_dvd]
-    
-    -- zmod.int_coe_zmod_eq_zero_iff_dvd
-    
-    sorry
-  apply HH
-  have poly_ZModPrimePow := poly_taylor_eval_ZMod z p₀ x y H support_le h
-
-  -- p₀.eval x ≡ p₀.eval y + ((Polynomial.derivative (R := ℤ)) p₀).eval y * z * (p^α : ℕ)
-  have poly_ZModPrime : p₀.eval x ≡ p₀.eval y [ZMOD p]
-  { 
-      -- zmod.cast_add
-    sorry
-  }
-  rw [← ZMod.int_cast_eq_int_cast_iff] at poly_ZModPrime
-  
-  push_cast at poly_ZModPrime
-  simp only [poly_eval_ZMod]
-  rw [ZMod.cast_int_cast]
-  rw [← poly_ZModPrime]
-  
-  -/
-
-  -- simp only [isCoprime_zero_left (x := poly_eval_ZMod p₀ y (p^(2*α)))]
-  
-  /-
-  rw [isUnit_iff_exists_inv] at *
-  cases' p₀_at_xIsUnit with c hc
-  have poly_ZMod := poly_taylor_eval_ZMod z p₀ x y H support_le h
-  rw [← ZMod.int_cast_eq_int_cast_iff] at poly_ZMod
-  simp only [poly_eval_ZMod] at hc
-  push_cast at poly_ZMod
-  simp only [poly_eval_ZMod]
-  -/ 
-  
-  -- apply Iff.mpr isUnit_iff_exists_inv 
-  
-  
-  -- rw [← isCoprime_self]
-  -- `poly_taylor_eval_ZMod` is the one 
-  -- refine Iff.mp isCoprime_self (?_ (id (Eq.symm h)))
-  sorry
-
--/ 
-
-/- 
-lemma poly_eval_ZMod_IsUnit_inv_one (p₀ : Polynomial ℤ) (x y : ℤ) (h : x = y + z * (p^α : ℕ)) (p₀_at_xIsUnit : IsUnit ((p₀.eval x : ℤ) : ZMod (p^(2*α)))) : 
-    ((p₀.eval y : ℤ) : ZMod (p^(2*α))) * rationalFunc_inverse p₀ y (p^(2*α)) = 1 := by
-
-  sorry
-  /-
-  have yIsUnit := poly_at_yIsUnit z p₀ x y h p₀_at_xIsUnit
-  simp only [poly_eval_ZMod] at *
-  simp only [rationalFunc_inverse]
-  exact ZMod.mul_inv_of_unit (↑(eval y p₀)) yIsUnit
-   -/
--/
 
 lemma ZMod_IsUnit_inv_eq_iff_eq_mul {a b c : ZMod (p^(2*α))} (h : IsUnit b): a * b⁻¹ = c ↔ a = c * b := by
   -- exact mul_inv_eq_iff_eq_mul (G := ZMod (p^(2*α)))
@@ -947,13 +465,7 @@ lemma ZMod_IsUnit_inv_eq_iff_eq_mul {a b c : ZMod (p^(2*α))} (h : IsUnit b): a 
     rw [mul_assoc]
     rw [ZMod.mul_inv_of_unit b h]
     rw [mul_one]
-  
-  -- exact False.elim IsUnit
 
-/- 
-theorem poly_taylor_eval_ZMod (p₀ : Polynomial ℤ) (x y : ℤ) (H : (taylor y p₀).support.Nonempty) (support_le : (taylor y p₀).support.max' H > 0) (h : x = y + z * (p^α : ℕ)) :
-    p₀.eval x ≡ p₀.eval y + ((Polynomial.derivative (R := ℤ)) p₀).eval y * z * (p^α : ℕ) [ZMOD (p^(2*α))] := by
--/
 /- corollary of theorem `poly_taylor_eval_ZMod` -/
 -- Do something about the `IsUnit (p₀.eval x)` later
 -- this should become the final boss for the power world
@@ -1041,56 +553,23 @@ lemma rationalFunc_eq_ZMod (p₁ p₀ : Polynomial ℤ) (x y : ℤ) [NeZero (p ^
   rw [ZMod.nat_cast_self]
   ring
 
-  /-
-  simp only [rationalFunc_well_defined_ZMod]
-  simp only [rationalFunc, rationalFunc_deriv] 
-  simp only [rationalFunc_inverse]
-  repeat rw [← poly_eval_ZMod] -- instead of having this, consider whether it's better to make the definitions using `poly_eval_ZMod`
-  
-
-
-  have poly_evalForp₁ := (poly_taylor_eval_ZMod z p₁ x y H₁ support_le_H₁ h)
-  have ZModCastForp₁ := Iff.mpr (ZMod.int_cast_eq_int_cast_iff (p₁.eval x) (p₁.eval y + ((Polynomial.derivative (R := ℤ)) p₁).eval y * z * (p^α : ℕ)) (p^(2*α))) poly_evalForp₁
-  rw [ZModCastForp₁]
-  have poly_evalForp₀ := (poly_taylor_eval_ZMod z p₀ x y H₀ support_le_H₀ h)
-  have ZModCastForp₀ := Iff.mpr (ZMod.int_cast_eq_int_cast_iff (p₀.eval x) (p₀.eval y + ((Polynomial.derivative (R := ℤ)) p₀).eval y * z * (p^α : ℕ)) (p^(2*α))) poly_evalForp₀
-  rw [ZModCastForp₀]
-  have p₀_in_yIsUnit : IsUnit ((p₀.eval y + (((Polynomial.derivative (R := ℤ)) p₀).eval y * z * (p^α : ℕ)) : ℤ) : ZMod (p^(2*α)))
-  { 
-    sorry
-  }
-  rw [← poly_eval_ZMod]
-  simp only [poly_eval_ZMod] at p₀_in_yIsUnit
-  rw [ZMod.mul_inv]
-
-  -/
-
-  /- 
-  rw [mul_left_inj ((p₀.eval y + ((Polynomial.derivative (R := ℤ)) p₀).eval y * z * (p^α : ℕ)) : ZMod (p^(2*α)))]
-  rw [ZMod.mul]
-  rw [inv_assoc]
-  -/
-  
-  
-/- # lemma needed
-need a lemma that shows that the denominator is unit → rationalFunc is unit
-or vice versa 
--/
-
-
 /- necessary for the theorem inv_cancel -/
-lemma rationalFunc_unit (x y : ℤ) :
+lemma rationalFunc_unit (x y : ℤ) (f₁_at_xIsUnit : IsUnit ((f₁.eval x : ℤ) : ZMod (p^(2*α)))) (f₀_at_xIsUnit : IsUnit ((f₀.eval x : ℤ) : ZMod (p^(2*α)))) :
     IsUnit (rationalFunc (f₁) (f₀) (x) (p^(2*α)) : ZMod (p^(2*α))) := by
-  sorry
+  simp only [rationalFunc]
+  apply IsUnit.mul
+  · exact f₁_at_xIsUnit
+  · rw [isUnit_iff_exists_inv]
+    use ((f₀.eval x : ℤ) : ZMod (p^(2*α)))
+    exact ZMod.inv_mul_of_unit ((f₀.eval x : ℤ) : ZMod (p^(2*α))) f₀_at_xIsUnit
 
 /- note to myself
 Figure out when and how to state the assumption rationalFunc_isunit at the start of this document
 -/ 
 lemma rationalFunc_inv_cancel (y : ℤ) (rationalFunc_isunit : IsUnit (rationalFunc (f₁) (f₀) (y) (p^(2*α)) : ZMod (p^(2*α)))):
-    (rationalFunc (f₁) (f₀) (y) (p^(2*α)) : ZMod (p^(2*α))) * (rationalFunc (f₁) (f₀) (y) (p^(2*α)) : ZMod (p^(2*α)))⁻¹ = 1 := by
+    (rationalFunc f₁ f₀ y (p^(2*α)) : ZMod (p^(2*α))) * (rationalFunc (f₁) (f₀) (y) (p^(2*α)) : ZMod (p^(2*α)))⁻¹ = 1 := by
   exact ZMod.mul_inv_of_unit (rationalFunc f₁ f₀ y (p ^ (2 * α))) rationalFunc_isunit
 
--- fix
 lemma MulChar_in_y_and_z (x y : ℤ) (h : x = y + z * (p^α : ℕ)) (f₀_at_xIsUnit : IsUnit ((f₀.eval x : ℤ) : ZMod (p^(2*α)))) (rationalFunc_at_y_isunit : IsUnit (rationalFunc (f₁) (f₀) (y) (p^(2*α)) : ZMod (p^(2*α)))) 
     (H₁ : (taylor y f₁).support.Nonempty) (H₀ : (taylor y f₀).support.Nonempty) (support_le_H₁ : (taylor y f₁).support.max' H₁ > 0) (support_le_H₀ : (taylor y f₀).support.max' H₀ > 0) (hα : 0 < α) :
     χ (rationalFunc (f₁) (f₀) (x) (p^(2*α))) = χ (rationalFunc (f₁) (f₀) (y) (p^(2*α))) 
@@ -1109,25 +588,78 @@ lemma MulChar_in_y_and_z (x y : ℤ) (h : x = y + z * (p^α : ℕ)) (f₀_at_xIs
   rw [rationalFunc_eq_ZMod z hp f₁ f₀ x y H₁ H₀ support_le_H₁ support_le_H₀ h f₀_at_xIsUnit hα]
   ring
 
-/- deleted the following:
-(p : ℕ) (hp : Prime p) (α : ℕ) (z : ZMod (p^α : ℕ)) (χ : MulChar (ZMod (p^(2*α) : ℕ)) ℂ)
--/ 
-theorem MulChar_eq_exp (x y : ℤ) :
-    ∃(b : ℕ), b < p^α ∧ χ' (χ) ((rationalFunc_deriv (f₁) (f₀) (y) (p^(2*α))) * (rationalFunc (f₁) (f₀) (x) (p^(2*α)) : ZMod (p^(2*α)))⁻¹ * z) 
+theorem MulChar_eq_exp :
+    ∃(b : ℕ), b < p^α ∧ ∀(x y : ℤ) (z : ZMod (p^α : ℕ)), χ' (χ) ((rationalFunc_deriv (f₁) (f₀) (y) (p^(2*α))) * (rationalFunc (f₁) (f₀) (x) (p^(2*α)) : ZMod (p^(2*α)))⁻¹ * z) 
     = eZMod (p^α : ℕ) (b * ((rationalFunc_deriv (f₁) (f₀) (y) (p^(2*α))) * (rationalFunc (f₁) (f₀) (x) (p^(2*α)) : ZMod (p^(2*α)))⁻¹ * z)) := by
-  exact MulChar_additive_eq_exp p hp α ((rationalFunc_deriv (f₁) (f₀) (y) (p^(2*α))) * (rationalFunc (f₁) (f₀) (x) (p^(2*α)) : ZMod (p^(2*α)))⁻¹ * z) χ 
+  have : NeZero (p^α) := ⟨pow_ne_zero α <| Prime.ne_zero hp⟩
+  have newExpression : ∃(ζ : ℂˣ), (ζ : ℂˣ) = (χ' (χ) (1) : ℂ)
+  { have H := MulChar_one_Unit χ
+    rw [IsUnit] at H
+    exact H }
+  have primepow_pos : ∃(q : ℕ+), q = p^α
+  { apply CanLift.prf (p^α)
+    exact Fin.size_positive' }
+  cases' newExpression with ζ hζ
+  cases' primepow_pos with q hq
+  -- why do both ζ and q : ?m.1264417
+  have ofunity : ζ ∈ rootsOfUnity q ℂ ↔ ((ζ : ℂˣ) : ℂ) ^ ((q : ℕ+) : ℕ) = 1 := by
+    simp only [mem_rootsOfUnity']
+    -- simp [Units.ext_iff] -- fixed after the bug in power notation in mathlib was found
+  have root : ζ ∈ rootsOfUnity q ℂ
+  { rw [ofunity, hζ, hq, MulChar_additive_pow, ZMod.nat_cast_self, mul_one]
+    exact MulChar_zero χ  }
+  rw [Complex.mem_rootsOfUnity, hq, hζ] at root
+  have pow (n : ℕ) {a : ℂ} {b : ℂ} : a = b → a^n = b^n
+  { intro h
+    norm_cast
+    exact congrFun (congrArg HPow.hPow h) n }
+  cases' root with b hb
+  refine' ⟨b, hb.left, _⟩
+  intro x y z
+  set c := (((rationalFunc_deriv (f₁) (f₀) (y) (p^(2*α))) * (rationalFunc (f₁) (f₀) (x) (p^(2*α)) : ZMod (p^(2*α)))⁻¹ : ZMod (p ^ α)) * z)
+  rw [← MulChar_additive_pow_val]
+  have hb_pow := pow c.val (hb.right)
+  norm_cast at hb_pow
+  rw [← Complex.exp_nat_mul] at hb_pow
+  simp only [eZMod]
+
+  have congr_val : ((b : ZMod (p^α : ℕ)) * c).val ≡ (b : ZMod (p^α)).val * c.val [ZMOD (p^α)]
+  { rw [ZMod.val_mul (↑b) c]
+    exact Int.mod_modEq ((b : ZMod (p^α)).val * ZMod.val c) (p ^ α) }
+
+  have new_NeZero : p^α ≠ 0 := by exact NeZero.ne (p^α)
+  have val_b : (b : ZMod (p^α)).val ≡ b [ZMOD (p^α)]
+  { simp only [Nat.cast_pow, ZMod.nat_cast_val]
+    norm_cast
+    rw [← ZMod.int_cast_eq_int_cast_iff]
+    simp  }
+  rw [cexp_congr_eq (p^α : ℕ) (((b : ZMod (p^α : ℕ)) * c).val) ((b : ZMod (p^α)).val * c.val)]
+  · have congr_b : (b : ZMod (p^α)).val * c.val ≡ b * c.val [ZMOD (p^α)] := by gcongr
+    -- simp at congr_b ⊢
+    rw [cexp_congr_eq (p^α : ℕ) ((b : ZMod (p^α)).val * c.val) (b * c.val)]
+    · push_cast at hb_pow ⊢
+      norm_cast
+      symm at hb_pow
+      rw [hb_pow]
+      push_cast
+      ring
+    · exact congr_b
+    · exact new_NeZero
+  · exact congr_val
+  · exact new_NeZero
+  done
 
 /- the natural number b whose existence is guaranteed by MulChar_eq_exp -/
-def MulChar_eq_exp_b (x y : ℤ) : ℕ := (MulChar_eq_exp z χ hp f₁ f₀ x y).choose
+def MulChar_eq_exp_b : ℕ := (MulChar_eq_exp χ hp f₁ f₀).choose
 
 variable (x y : ℤ)
 
-lemma MulChar_eq_exp_b_WellDefined : (MulChar_eq_exp z χ hp f₁ f₀ x y).choose = MulChar_eq_exp_b z χ hp f₁ f₀ x y := rfl
+lemma MulChar_eq_exp_b_WellDefined : (MulChar_eq_exp χ hp f₁ f₀).choose = MulChar_eq_exp_b χ hp f₁ f₀ := rfl
 
-theorem MulChar_eq_exp_b_spec (x y : ℤ) :
-   (MulChar_eq_exp_b z χ hp f₁ f₀ x y) < p^α ∧ χ' (χ) ((rationalFunc_deriv (f₁) (f₀) (y) (p^(2*α))) * (rationalFunc (f₁) (f₀) (x) (p^(2*α)) : ZMod (p^(2*α)))⁻¹ * z) 
-    = eZMod (p^α : ℕ) ((MulChar_eq_exp_b z χ hp f₁ f₀ x y) * ((rationalFunc_deriv (f₁) (f₀) (y) (p^(2*α))) * (rationalFunc (f₁) (f₀) (x) (p^(2*α)) : ZMod (p^(2*α)))⁻¹ * z)) :=
-  (MulChar_eq_exp z χ hp f₁ f₀ x y).choose_spec
+theorem MulChar_eq_exp_b_spec :
+   (MulChar_eq_exp_b χ hp f₁ f₀) < p^α ∧ ∀(x y : ℤ) (z : ZMod (p^α : ℕ)), χ' (χ) ((rationalFunc_deriv (f₁) (f₀) (y) (p^(2*α))) * (rationalFunc (f₁) (f₀) (x) (p^(2*α)) : ZMod (p^(2*α)))⁻¹ * z) 
+    = eZMod (p^α : ℕ) ((MulChar_eq_exp_b χ hp f₁ f₀) * ((rationalFunc_deriv (f₁) (f₀) (y) (p^(2*α))) * (rationalFunc (f₁) (f₀) (x) (p^(2*α)) : ZMod (p^(2*α)))⁻¹ * z)) :=
+  (MulChar_eq_exp χ hp f₁ f₀).choose_spec
 
 open AddChar
 
@@ -1154,7 +686,8 @@ lemma AddChar_isUnit : IsUnit (ψ 1) := by
   aesop
   -- tauto
 
-    -- Complex.mem_rootsOfUnity
+/- previous version (weaker version without `(z₀ : ZMod (p^(2*α)))`)
+-- Complex.mem_rootsOfUnity
 /- very similar to the proof for the theorem `MulChar_additive_eq_exp` in the document lemma_char_v4.lean -/
 theorem AddChar_eq_exp (z₀ : ZMod (p^(2*α))) :
     ∃(a : ℕ), a < p^(2*α) ∧ ψ z₀ = eZMod (p^(2*α)) (a * z₀) := by
@@ -1213,11 +746,15 @@ theorem AddChar_eq_exp (z₀ : ZMod (p^(2*α))) :
   · exact congr_val
   · exact new_NeZero
   done
+ -/
 
 /- the new version we need for `choose_spec` later -/
 /- very similar to the proof for the theorem `MulChar_additive_eq_exp` in the document lemma_char_v4.lean -/
-theorem AddChar_eq_exp' :
-    ∃(a : ℕ), a < p^(2*α) ∧ ∀(z : ZMod (p^(2*α))), ψ z = eZMod (p^(2*α)) (a * z) := by
+
+-- ψ ((rationalFunc_deriv (g₁) (g₀) (y) (p^(2*α))) * z * (p^α : ℕ))
+
+theorem AddChar_eq_exp :
+    ∃(a : ℕ), a < p^(2*α) ∧ ∀(y : ℤ) (z : ZMod (p^(2*α))), ψ ((rationalFunc_deriv (g₁) (g₀) (y) (p^(2*α))) * z * (p^α : ℕ)) = eZMod (p^(2*α)) (a * ((rationalFunc_deriv (g₁) (g₀) (y) (p^(2*α))) * z * (p^α : ℕ))) := by
   have : NeZero (p^(2*α)) := ⟨pow_ne_zero (2*α) <| Prime.ne_zero hp⟩ -- delete this later because we have the lemma
   -- rw [← mul_one z₀]
   have newExpression : ∃(ζ : ℂˣ), (ζ : ℂˣ) = (ψ 1 : ℂ)
@@ -1235,24 +772,23 @@ theorem AddChar_eq_exp' :
   have root : ζ ∈ rootsOfUnity q ℂ
   { rw [ofunity, hζ, hq, ← mulShift_spec' ψ (p^(2 * α)) 1, ZMod.nat_cast_self, mulShift_zero, one_apply]  }
   rw [Complex.mem_rootsOfUnity, hq, hζ] at root
-  cases' root with a ha
-  use a
-  apply And.intro (ha.left)
-  intro z
-
-  have AddChar_one_pow : (ψ 1)^z.val = ψ z
-  { rw [← mulShift_spec' ψ z.val 1, mulShift_apply]
+  rcases root with ⟨a, ha, hexp⟩
+  refine' ⟨a, ha, _⟩
+  intro y z
+  set c := ((rationalFunc_deriv (g₁) (g₀) (y) (p^(2*α))) * z * (p^α : ℕ))
+  have AddChar_one_pow : (ψ 1)^c.val = ψ c
+  { rw [← mulShift_spec' ψ c.val 1, mulShift_apply]
     simp only [ZMod.nat_cast_val, ZMod.cast_id', id_eq, mul_one]  }
   rw [← AddChar_one_pow]
   
-  have ha_pow := complex_pow (z.val) (exp (2 * ↑Real.pi * I * (↑a / ↑(p ^ (2 * α))))) (ψ 1) (ha.right)
+  have ha_pow := complex_pow (c.val) (exp (2 * ↑Real.pi * I * (↑a / ↑(p ^ (2 * α))))) (ψ 1) hexp
   norm_cast at ha_pow
   rw [← Complex.exp_nat_mul] at ha_pow
 
   simp only [eZMod]
-  have congr_val : ((a : ZMod (p^(2*α) : ℕ)) * z).val ≡ (a : ZMod (p^(2*α))).val * z.val [ZMOD (p^(2*α))]
-  { rw [ZMod.val_mul (↑a) z]
-    exact Int.mod_modEq ((a : ZMod (p^(2*α))).val * ZMod.val z) (p ^ (2*α)) }
+  have congr_val : ((a : ZMod (p^(2*α) : ℕ)) * c).val ≡ (a : ZMod (p^(2*α))).val * c.val [ZMOD (p^(2*α))]
+  { rw [ZMod.val_mul (↑a) c]
+    exact Int.mod_modEq ((a : ZMod (p^(2*α))).val * ZMod.val c) (p ^ (2*α)) }
 
   -- follows from the theorem `NeZero_pPow`
   have new_NeZero : p^(2*α) ≠ 0 := by exact NeZero.ne (p^(2*α))
@@ -1261,13 +797,14 @@ theorem AddChar_eq_exp' :
     norm_cast
     rw [← ZMod.int_cast_eq_int_cast_iff]
     simp  }
-  rw [cexp_congr_eq (p^(2*α) : ℕ) (((a : ZMod (p^(2*α) : ℕ)) * z).val) ((a : ZMod (p^(2*α))).val * z.val)]
-  · have congr_a : (a : ZMod (p^(2*α))).val * z.val ≡ a * z.val [ZMOD (p^(2*α))] := by gcongr
+  rw [cexp_congr_eq (p^(2*α) : ℕ) (((a : ZMod (p^(2*α) : ℕ)) * c).val) ((a : ZMod (p^(2*α))).val * c.val)]
+  · have congr_a : (a : ZMod (p^(2*α))).val * c.val ≡ a * c.val [ZMOD (p^(2*α))] := by gcongr
     -- simp at congr_b ⊢
-    rw [cexp_congr_eq (p^(2*α) : ℕ) ((a : ZMod (p^(2*α))).val * z.val) (a * z.val)]
+    rw [cexp_congr_eq (p^(2*α) : ℕ) ((a : ZMod (p^(2*α))).val * c.val) (a * c.val)]
     · push_cast at ha_pow ⊢
       norm_cast
       symm at ha_pow
+      nth_rw 1 [Nat.cast_pow]
       rw [ha_pow]
       push_cast
       ring
@@ -1277,33 +814,13 @@ theorem AddChar_eq_exp' :
   · exact new_NeZero
   done
 
-/- 
+/-
 # later on we need this lemma complex_natural
-later incoporate this in this the theorem hh' : `(p ^ α : ℂ) / (p ^ (2 * α) : ℂ) = 1 / (p ^ α : ℂ)`
-but remember to use it as the theorem `Nat.cast_mul n₁ n₂`
--/
 lemma complex_natural (n₁ n₂: ℕ): ((n₁ * n₂ : ℕ) : ℂ) = (n₁ : ℂ) * (n₂ : ℂ) := by
   exact Nat.cast_mul n₁ n₂
 
-/- changed its location 
-lemma congr_self (n q : ℕ) [NeZero q] : (n : ZMod q).val ≡ n [ZMOD q] := by
-  rw [← ZMod.int_cast_eq_int_cast_iff]
-  simp only [ZMod.nat_cast_val, ZMod.int_cast_cast, ZMod.cast_nat_cast', cast_ofNat]
--/
-
-
-/- 
-lemma foofoo (n q : ℕ): ∃(m : ℤ), ((n : ZMod (q)).val) = (n : ℕ) + m * (q : ℕ) := by
-  sorry 
-  /- 
-  lemma bar (a b : ℕ) (q : ℕ) (hq : q ≠ 0) (ha : a < q) (hab : a ≡ b [MOD q]) :
-    ∃ n, b = a + n * q := by
-  simp [Nat.ModEq] at hab
-  rw [Nat.mod_eq_of_lt ha] at hab
-  rw [hab]
-  use b / q
-  exact Eq.symm (Nat.mod_add_div' b q)
-  -/
+later incoporate this in this the theorem hh' : `(p ^ α : ℂ) / (p ^ (2 * α) : ℂ) = 1 / (p ^ α : ℂ)`
+but remember to use it as the theorem `Nat.cast_mul n₁ n₂`
 -/
 
 -- erase the assumption `h` and derive from the existing assumption
@@ -1319,73 +836,126 @@ lemma foo' (h : (p^(2*α) : ℂ) ≠ 0): ∃(m : ℤ), (((p ^ α : ZMod (p ^ (2 
     rw [mul_comm, pow_mul, Nat.pow_two (p^α), Nat.cast_mul, Nat.cast_pow, div_self_mul_self', one_div]
   rw [add_div, hh', ← mul_div, div_self h, Nat.cast_pow, one_div, mul_one]
   
-theorem AddChar_rationalFunc_deriv_eq_exp (y : ℤ) :
-    ∃(a : ℕ), a < p^(2*α) ∧ ψ ((rationalFunc_deriv (g₁) (g₀) (y) (p^(2*α))) * z * (p^α : ℕ)) = eZMod (p^α : ℕ) (a * ((rationalFunc_deriv (g₁) (g₀) (y) (p^(2*α))) * z)) := by
+lemma valZModLarger_eq_ZModSmaller {a b : ℕ} (h : b ≤ a) [NeZero b] (n : ZMod b) : 
+    (n : ZMod a).val = n.val := by
+  rw [ZMod.cast_eq_val]
+  rw [ZMod.val_cast_of_lt]
+  suffices n.val < b by
+    exact Nat.lt_of_lt_of_le this h
+  exact ZMod.val_lt n
+
+-- probably the assumption `(hα : α > 0)` will need to go on the top later
+lemma pPow_lt_pTwoPow (hα : α > 0) : p^α < p^(2*α) := by
+  apply pow_lt_pow
+  rw [← Nat.prime_iff] at hp
+  · exact Nat.Prime.one_lt hp
+  · exact lt_two_mul_self hα
+
+lemma dvd_pow_two : p^α ∣ p^(2*α) := ⟨p^α, by ring⟩
+
+/- You're gonna have some headache reviewing the below proof -/
+theorem AddChar_rationalFunc_deriv_eq_exp (hα : 0 < α) :
+    ∃(a : ℕ), a < p^(2*α) ∧ ∀(y : ℤ) (z : ZMod (p ^ α)), ψ ((rationalFunc_deriv (g₁) (g₀) (y) (p^(2*α))) * z * (p^α : ℕ)) = eZMod (p^α : ℕ) (a * ((rationalFunc_deriv (g₁) (g₀) (y) (p^(2*α))) * z)) := by
   -- ∃(a : ℕ), a < p^(2*α) ∧ ψ z₀ = eZMod (p^(2*α)) (a * z₀) := by
-  have eq_exp := AddChar_eq_exp ψ hp (rationalFunc_deriv (g₁) (g₀) (y) (p^(2*α)) * z * (p ^ α : ℕ))
+  have eq_exp := AddChar_eq_exp ψ hp g₁ g₀
   simp only [eZMod] at *
   -- simp only [Nat.cast_pow, ZMod.nat_cast_val] at eq_exp 
+  rcases eq_exp with ⟨a, ha, eq_exp⟩
+  refine' ⟨a, ha, _⟩
+  intro y z
+  rw [eq_exp]
+  rw [← mul_assoc (a : ZMod (p ^ (2 * α)))]
+  rw [← mul_assoc (a : ZMod (p ^ (2 * α)))]
+  have ha_lt := ZMod.val_lt ((a : ZMod (p ^ (2 * α))) * rationalFunc_deriv (g₁) (g₀) (y) (p^(2*α)) * (z : ZMod (p ^ (2 * α))) * (p ^ α : ZMod (p ^ (2 * α))))
+  have ha_modEq : ((a : ZMod (p ^ (2 * α))) * rationalFunc_deriv (g₁) (g₀) (y) (p^(2*α)) * z * (p ^ α : ℕ)).val ≡ ((a : ZMod (p ^ (2 * α))) * (rationalFunc_deriv (g₁) (g₀) (y) (p^(2*α))) * z).val * (p ^ α : ℕ) [MOD (p ^ (2 * α))]
+  { rw [ZMod.val_mul]
+    rw [ZMod.val_cast_of_lt (pPow_lt_pTwoPow hp hα)]
+    exact Nat.mod_modEq (((a : ZMod (p ^ (2 * α))) * rationalFunc_deriv (g₁) (g₀) (y) (p^(2*α)) * z).val * (p ^ α : ℕ)) (p ^ (2 * α)) }
+  have exists_ha_modEq := exists_eq_of_nat_coe_mod_eq ((a : ZMod (p ^ (2 * α))) * rationalFunc_deriv (g₁) (g₀) (y) (p^(2*α)) * z * (p ^ α : ℕ)).val (((a : ZMod (p ^ (2 * α))) * (rationalFunc_deriv (g₁) (g₀) (y) (p^(2*α))) * z).val * (p ^ α : ℕ)) (p ^ (2 * α)) ha_lt ha_modEq
+  cases' exists_ha_modEq with n exists_ha_modEq 
+  -- for `Nat.sub_eq_iff_eq_ad` and `Nat.cast_sub`
+  have diff_lt_zmod : n * (p ^ (2 * α)) ≤ ((a : ZMod (p ^ (2 * α))) * (rationalFunc_deriv (g₁) (g₀) (y) (p^(2*α))) * z).val * (p ^ α : ℕ)
+  { -- have := Nat.zero_le ((a : ZMod (p ^ (2 * α))) * rationalFunc_deriv (g₁) (g₀) (y) (p^(2*α)) * z * (p ^ α : ℕ)).val
+    rw [exists_ha_modEq]
+    exact Nat.le_add_left (n * (p ^ (2 * α))) ((a : ZMod (p ^ (2 * α))) * rationalFunc_deriv (g₁) (g₀) (y) (p^(2*α)) * z * (p ^ α : ℕ)).val }
+  rw [← Nat.sub_eq_iff_eq_add diff_lt_zmod] at exists_ha_modEq
+  rw [← exists_ha_modEq]
+  /- attempt to get rid of the term `n * p ^ (2 * α)` in the exp -/
+  rw [Nat.cast_sub diff_lt_zmod]
+  rw [mul_div_assoc]
+  rw [Nat.cast_mul]
+  rw [Nat.cast_mul]
+  rw [sub_div]
+  rw [mul_div_assoc]
+  rw [mul_div_assoc]
+  rw [div_self (NeZero.natCast_ne (p ^ (2 * α)) ℂ)]
+  simp_rw [mul_comm 2 α]
+  simp_rw [pow_mul] -- why does it behave differently from `rw`? 
+  rw [pow_two]
+  rw [Nat.cast_mul]
+  rw [div_mul_right (p ^ α : ℂ) (NeZero.natCast_ne (p ^ α) ℂ)]
+  rw [mul_sub]
+  rw [exp_sub]
+  rw [mul_one]
+  rw [mul_comm (2 * Real.pi * I) (n : ℂ)]
+  rw [← cast_ofNat n]
+  rw [exp_int_mul_two_pi_mul_I n]
+  rw [div_one]
+  -- got rid of the term
+  -- show the congruence of the 
+  have zmod_mod_zmod :  (((a : ZMod (p ^ α)) * (rationalFunc_deriv (g₁) (g₀) (y) (p^(2*α)) : ZMod (p ^ α))) * z).val ≡ ((a : ZMod (p ^ (2 * α))) * (rationalFunc_deriv (g₁) (g₀) (y) (p^(2*α))) * z).val [MOD (p ^ α)]
+  { rw [mul_assoc]
+    have hc₁_lhs := congr_val (p ^ α) (a : ZMod (p ^ α)) (((rationalFunc_deriv (g₁) (g₀) (y) (p^(2*α)) : ZMod (p ^ α))) * z)
+    have hc₂_lhs := congr_val (p ^ α) ((rationalFunc_deriv (g₁) (g₀) (y) (p^(2*α)) : ZMod (p ^ α))) z
+    have hc₂_lhs_mul := Nat.ModEq.mul_left (a : ZMod (p ^ α)).val hc₂_lhs
+    have hc₁_rhs := congr_val (p ^ (2 * α)) (a : ZMod (p ^ (2 * α))) (rationalFunc_deriv (g₁) (g₀) (y) (p^(2*α)) * (z : ZMod (p ^ (2 * α))))
+    have hc₂_rhs := congr_val (p ^ (2 * α)) (rationalFunc_deriv (g₁) (g₀) (y) (p^(2*α))) (z : ZMod (p ^ (2 * α)))
+    have hc₂_rhs_mul := Nat.ModEq.mul_left (a : ZMod (p ^ (2 * α))).val hc₂_rhs
+    have hc₁_rhs_dvd := Nat.ModEq.of_dvd dvd_pow_two hc₁_rhs
+    rw [← mul_assoc] at hc₁_rhs_dvd
+    have hc₂_rhs_dvd := Nat.ModEq.of_dvd dvd_pow_two hc₂_rhs_mul
+    apply Nat.ModEq.trans hc₁_lhs _
+    apply Nat.ModEq.trans hc₂_lhs_mul _
+    apply Nat.ModEq.trans _ (Nat.ModEq.symm (hc₁_rhs_dvd)) -- don't forget `Nat.`
+    apply Nat.ModEq.trans _ (Nat.ModEq.symm (hc₂_rhs_dvd))
+    repeat' apply Nat.ModEq.mul -- is this the best way to split the goal into 3?
+    · rw [← ZMod.eq_iff_modEq_nat]
+      simp only [ZMod.nat_cast_val, ZMod.cast_nat_cast']
+      rw [ZMod.cast_nat_cast dvd_pow_two a]
+    · rw [← ZMod.eq_iff_modEq_nat]
+      simp only [ZMod.nat_cast_val, ZMod.cast_nat_cast']
+      exact ZMod.cast_id (p ^ α) ↑(rationalFunc_deriv g₁ g₀ y (p ^ (2 * α))) 
+    · rw [← ZMod.eq_iff_modEq_nat]
+      -- rw [← ZMod.nat_cast_val]
+      -- rw [ZMod.val_nat_cast]
+      rw [valZModLarger_eq_ZModSmaller (le_of_lt (pPow_lt_pTwoPow hp hα))] }
+  have zmod_val_lt : (((a : ZMod (p ^ α)) * (rationalFunc_deriv (g₁) (g₀) (y) (p^(2*α)) : ZMod (p ^ α))) * z).val < p ^ α  := by 
+    exact ZMod.val_lt (((a : ZMod (p ^ α)) * (rationalFunc_deriv (g₁) (g₀) (y) (p^(2*α)) : ZMod (p ^ α))) * z)
+  have exists_zmod_mod_zmod := exists_eq_of_nat_coe_mod_eq (((a : ZMod (p ^ α)) * (rationalFunc_deriv (g₁) (g₀) (y) (p^(2*α)) : ZMod (p ^ α))) * z).val ((a : ZMod (p ^ (2 * α))) * (rationalFunc_deriv (g₁) (g₀) (y) (p^(2*α))) * z).val (p ^ α) zmod_val_lt zmod_mod_zmod
+  cases' exists_zmod_mod_zmod with n exists_zmod_mod_zmod
+  rw [exists_zmod_mod_zmod]
+  rw [← mul_div_assoc]
+  rw [mul_one]
+  rw [Nat.cast_add]
+  rw [Nat.cast_mul]
+  rw [← div_add_div_same]
+  rw [mul_div_assoc]
+  rw [div_self (NeZero.natCast_ne (p ^ (α)) ℂ)]
+  rw [mul_one]
+  rw [mul_add]
+  rw [exp_add]
+  rw [mul_comm (2 * Real.pi * I) (n : ℂ)]
+  rw [← cast_ofNat n]
+  rw [exp_int_mul_two_pi_mul_I n]
+  rw [mul_one]
+  rw [← mul_assoc]
+  rw [mul_div_assoc]
 
-  /- strategy of proof
-  for eq_exp :
-  1. Show ZMod.val (↑a * (↑(rationalFunc_deriv g₁ g₀ y (p ^ (2 * α))) * ↑z * ↑(p ^ α))) = ZMod.val (↑a * (↑(rationalFunc_deriv g₁ g₀ y (p ^ (2 * α))) * z) *  ZMod.val (↑(p ^ α))) + m * p ^ (2 * α) for some integer b
-     use the following lemma from lemma_char_v4.lean
-     1. 
-     lemma congr_val (q : ℕ) (x₁ x₂ : ZMod q) : 
-      (x₁ * x₂).val ≡ x₁.val * x₂.val [MOD q] := by
-     rw [ZMod.val_mul x₁ x₂]
-     exact Nat.mod_modEq (x₁.val * x₂.val) (q)
+def AddChar_eq_exp_a : ℕ := (AddChar_rationalFunc_deriv_eq_exp ψ hp g₁ g₀ hα).choose
 
-     2. 
-     have congr_val : ((b : ZMod (p^α : ℕ)) * z).val ≡ (b : ZMod (p^α)).val * z.val [ZMOD (p^α)]
-    { rw [ZMod.val_mul (↑b) z]
-      exact Int.mod_modEq ((b : ZMod (p^α)).val * ZMod.val z) (p ^ α) }
-
-     3. 
-     have congr_b : (b : ZMod (p^α)).val * z.val ≡ b * z.val [ZMOD (p^α)] := by gcongr
-
-     Need to choose later 
- 
-  2. Cancel out the m * p ^ (2 * α) term in the exponential
-  3. Show that for A B : ℕ, (A : ℂ) * (B : ℂ) = (A * B : ℕ) 
-     Update: the proof is `by exact Eq.symm (complex_natural A B)`
-     Then with the above, ↑(ZMod.val (↑a * (↑(rationalFunc_deriv g₁ g₀ y (p ^ (2 * α))) * z) *  ZMod.val (↑(p ^ α)))) = ↑(ZMod.val (↑a * (↑(rationalFunc_deriv g₁ g₀ y (p ^ (2 * α))) * z)) *  ↑(ZMod.val (↑(p ^ α))))
-  
-  
-  
-  4. Then need to deal with `↑(ZMod.val (↑(p ^ α))) / ↑(p ^ (2 * α)) = 1 / ↑(p ^ α) + m` for some integer
-  5. Then the term `m` will disappear inside the exponential
-   -/
-  
-
-  sorry 
-
--- decide whether we really want to do it for the variable `z` not another variable
-/- the natural number a whose existence is guaranteed by AddChar_eq_exp -/
-/- 
-It is okay to have the variable as `x` and `y` as long as they are just arbitrary variables without any condition on it
-like `h : x = y + z * p^α`
--/
-
-/- previous version
-def AddChar_eq_exp_a : ℕ := (AddChar_eq_exp ψ hp z).choose
-
---AddChar_eq_exp_a z ψ hp
 theorem AddChar_eq_exp_a_spec :
-    AddChar_eq_exp_a z ψ hp < p^(2*α) ∧ ψ z = eZMod (p^(2*α)) (AddChar_eq_exp_a z ψ hp * z) :=
-  (AddChar_eq_exp ψ hp z).choose_spec
--/
-
-def AddChar_eq_exp_a : ℕ := (AddChar_rationalFunc_deriv_eq_exp z ψ hp g₁ g₀ y).choose
-
-theorem AddChar_eq_exp_a_spec :
-    (AddChar_eq_exp_a z ψ hp g₁ g₀ y) < p^(2*α) ∧ ψ ((rationalFunc_deriv (g₁) (g₀) (y) (p^(2*α))) * z * (p^α : ℕ)) = eZMod (p^α : ℕ) ((AddChar_eq_exp_a z ψ hp g₁ g₀ y) * ((rationalFunc_deriv (g₁) (g₀) (y) (p^(2*α))) * z)) :=
-  (AddChar_rationalFunc_deriv_eq_exp z ψ hp g₁ g₀ y).choose_spec
-
--- delete this later
-instance (q : ℕ) [NeZero q] : Fintype (ZMod q) := by
-  -- exact False.elim is_good
-  infer_instance
+    (AddChar_eq_exp_a ψ hp g₁ g₀ hα) < p^(2*α) ∧ ∀(y : ℤ) (z : ZMod (p ^ α)), ψ ((rationalFunc_deriv (g₁) (g₀) (y) (p^(2*α))) * z * (p^α : ℕ)) = eZMod (p^α : ℕ) ((AddChar_eq_exp_a ψ hp g₁ g₀ hα) * ((rationalFunc_deriv (g₁) (g₀) (y) (p^(2*α))) * z)) :=
+  (AddChar_rationalFunc_deriv_eq_exp ψ hp g₁ g₀ hα).choose_spec
 
 /- # Final sentences of lemma 12.2: The Challenge -/
 
@@ -1401,78 +971,10 @@ lemma ZModLarger_eq_ZModSmaller (a b : ℕ) (h : b ≤ a) [NeZero b] (n : ZMod b
   · apply lt_of_lt_of_le ?_ h
     exact ZMod.val_lt n
 
-lemma dvd_pow_two : p^α ∣ p^(2*α) := ⟨p^α, by ring⟩
-
 def aux_fun (x : ZMod (p^(2*α))) : ZMod (p^α) := x.val / p^α
 
 def val_mod (n : ℕ) [NeZero n] (x : ZMod n) : (x.val : ZMod n) = x := by
   exact ZMod.nat_cast_zmod_val x
-
-/- previous version
-example (hα : 0 < α) : (ZMod (p^(2*α)))ˣ ≃ (ZMod (p^α))ˣ × ZMod (p^α) where
-  toFun x := ⟨Units.map (ZMod.castHom dvd_pow_two _).toMonoidHom x, aux_fun x⟩
-  invFun yz := ZMod.unitOfCoprime (yz.1.val.val + p^α * yz.2.val) <| by
-    rw [← Nat.prime_iff] at hp
-    cases' yz with y z; dsimp
-    apply Nat.Prime.coprime_pow_of_not_dvd hp
-    intro hp'
-    rw [Nat.dvd_add_left] at hp'
-    · have := ZMod.val_coe_unit_coprime y
-      rw [Nat.Prime.dvd_iff_not_coprime (by assumption)] at hp'
-      apply hp'
-      apply Nat.coprime.coprime_dvd_left _ this.symm
-      exact dvd_pow (dvd_refl p) hα.ne'
-    · apply dvd_mul_of_dvd_left
-      exact dvd_pow (dvd_refl p) hα.ne'
-  left_inv := by
-    intro x
-    ext
-    simp only [RingHom.toMonoidHom_eq_coe, Units.coe_map, MonoidHom.coe_coe, ZMod.castHom_apply, ZMod.coe_unitOfCoprime,
-      Nat.cast_add, Nat.cast_mul, Nat.cast_pow, aux_fun]
-    sorry -- eew
-  right_inv := by
-    rw [← Nat.prime_iff] at hp
-    rintro ⟨y, z⟩
-    have : NeZero (p^α : ℕ) := ⟨pow_ne_zero α <| Nat.Prime.ne_zero hp⟩
-    ext <;> simp
-    · convert zero_mul z -- changed this bit from Kevin's code
-      norm_cast
-      exact ZMod.nat_cast_self (p ^ α)
-    · simp only [aux_fun]
-      rw [ZMod.val_add]
-      rw [Nat.mod_eq_of_lt]
-      · rw [ZMod.val_mul]
-        rw [Nat.mod_eq_of_lt]
-        · norm_cast
-          rw [ZMod.val_cast_of_lt, Nat.add_mul_div_left]
-          · simp only [Nat.cast_add, ZMod.nat_cast_val]
-            rw [Nat.div_eq_zero]
-            · norm_cast
-              rw [aargh]; simp
-              apply pow_le_pow
-              linarith [Nat.Prime.pos hp]
-              linarith
-            · sorry
-          · sorry
-          · sorry
-        · sorry
-      · sorry
--/
-
-lemma valZModLarger_eq_ZModSmaller {a b : ℕ} (h : b ≤ a) [NeZero b] (n : ZMod b) : 
-    (n : ZMod a).val = n.val := by
-  rw [ZMod.cast_eq_val]
-  rw [ZMod.val_cast_of_lt]
-  suffices n.val < b by
-    exact Nat.lt_of_lt_of_le this h
-  exact ZMod.val_lt n
-  
--- probably the assumption `(hα : α > 0)` will need to go on the top later
-lemma pPow_lt_pTwoPow (hα : α > 0) : p^α < p^(2*α) := by
-  apply pow_lt_pow
-  rw [← Nat.prime_iff] at hp
-  · exact Nat.Prime.one_lt hp
-  · exact lt_two_mul_self hα
 
 /- we don't need this anymore for now; erase this later when completed -/
 /- for the `right_inv` of def `UnitEquivUnitProdZMod` -/
@@ -1543,7 +1045,7 @@ def UnitEquivUnitProdZMod (hα : 0 < α) : (ZMod (p^(2*α)))ˣ ≃ (ZMod (p^α))
     · simp only [aux_fun]
       rw [ZMod.val_add] -- the calculation of evil coercion starts here
       rw [Nat.mod_eq_of_lt] 
-      · rw [ZMod.val_mul] -- very similar to the proof i need to prove
+      · rw [ZMod.val_mul] -- very similar to the proof I need to prove later on
         rw [Nat.mod_eq_of_lt]
         · norm_cast
           rw [ZMod.val_cast_of_lt, Nat.add_mul_div_right]
@@ -1625,19 +1127,6 @@ lemma IntcoeZModLarger_eq_ZModSmaller (a b : ℕ) (h : b ≤ a) [NeZero b] (n : 
     rw [this]
   exact Eq.symm (valZModLarger_eq_ZModSmaller h ↑n)
 
-/-
-/- for the second goal of the second goal for the theorem `sum_bijection` -/
-lemma NatcoeZModLarger_eq_ZModSmaller_to_Int (a b n : ℕ) (h : b ≤ a) [NeZero b] : 
-    (((n : ZMod b) : ZMod a) : ℤ) = ((n : ZMod b) : ℤ) := by
-  suffices ((n : ZMod b) : ZMod a).val = (n : ZMod b).val by
-    have NeZeroFora := NeZeroForSmaller h
-    rw [← ZMod.nat_cast_val ((n : ZMod b) : ZMod a)] 
-    rw [this]
-    rw [← ZMod.nat_cast_val (n : ZMod b)]
-  exact NatcoeZModLarger_eq_ZModSmaller_to_val h
-
--/
-
 lemma valZModLarger_eq_ZModSmaller' {a b : ℕ} (h : b ≤ a) [NeZero b] (n : ZMod b) : 
     (n : ZMod a).val = n.val := by
   rw [ZMod.cast_eq_val]
@@ -1666,7 +1155,7 @@ lemma ZMod_Int_cast_mul (q : ℕ) (a b : ZMod q) [NeZero q] (h : (a * b : ℤ) <
 /- for the second goal of the second goal for the theorem `sum_bijection` -/
 lemma NatcoeZModLarger_eq_ZModSmaller_to_val {a b n : ℕ} (h : b ≤ a) [NeZero b] : 
     ((n : ZMod b) : ZMod a).val = (n : ZMod b).val := by
-  have NeZeroFora := NeZeroForSmaller h -- although shadowed, we need this variable 
+  have NeZeroFora := NeZeroForSmaller h -- although shadowed, we need this variable (Note to kevin : wait until the letters change from blue to grey after you comment this line out)
   exact valZModLarger_eq_ZModSmaller' h ↑n
 
 /- for the second goal of the second goal for the theorem `sum_bijection` -/
@@ -1678,74 +1167,7 @@ lemma NatcoeZModLarger_eq_ZModSmaller_to_Int (a b n : ℕ) (h : b ≤ a) [NeZero
     rw [this]
     rw [← ZMod.nat_cast_val (n : ZMod b)]
   exact NatcoeZModLarger_eq_ZModSmaller_to_val h
-
-/- I think `Finset.sum_bij'` follows the structure of the isomorphism `UnitEquivUnitProdZMod` 
-This version of the theorem is not applicable to the below other theorems
-Use the version 2
-
-Previous version
-
-theorem sum_bijection (f : ZMod (p^(2*α)) → ℂ) (g : ℤ → ZMod (p^(2*α))) [NeZero (p^α : ℕ)] (hα : 0 < α) :
-    ∑ x : (ZMod (p^(2*α)))ˣ, f (g x) = ∑ yz : (ZMod (p^α))ˣ × ZMod (p^α), f (g (yz.1 + yz.2 * (p^α : ℕ))) := by
-  apply Finset.sum_bij' (fun i _ => (UnitEquivUnitProdZMod hp hα).toFun i) (j := fun j _ => (UnitEquivUnitProdZMod hp hα).invFun j) -- map `i` is toFun and map `j` must be invFun
-  · intro a ha
-    exact Finset.mem_univ ((fun i x => Equiv.toFun (UnitEquivUnitProdZMod hp hα) i) a ha)
-    -- (i := UnitEquivUnitProdZMod.toFun i) (j := UnitEquivUnitProdZMod.invFun j)
-    -- refine fun a ha => ?_ a ha
-  · intro a ha
-    apply congr_arg
-    apply congr_arg
-    simp only [Equiv.toFun_as_coe_apply]
-    -- I think I need Kevin's help: Read the following code later
-    have := (UnitEquivUnitProdZMod hp hα).left_inv a
-    unfold UnitEquivUnitProdZMod aux_fun at this ⊢
-    simp [ZMod.unitOfCoprime] at this
-    nth_rewrite 1 [← this]
-    dsimp at this ⊢ 
-    rw [ZMod.coe_add_eq_ite]
-    rw [if_neg]
-    simp
-    norm_cast
-    congr 1
-    · rw [← IntcoeZModLarger_eq_ZModSmaller]
-      exact Nat.le_of_lt (pPow_lt_pTwoPow hp hα)
-      -- rw [ZModLarger_eq_ZModSmaller]
-    · rw [ZMod_Int_cast_mul]
-      · rw [NatcoeZModLarger_eq_ZModSmaller_to_Int (h := Nat.le_of_lt (pPow_lt_pTwoPow hp hα))]
-        
-        
-        -- rw [ZMod.coe_int_cast (p^α)]
-        
-      · -- rw [pow_mul p 2 α]
-        -- rw [pow_two]
-        sorry
     
-    · contrapose!
-      intro _
-      rw [← IntcoeZModLarger_eq_ZModSmaller]
-      norm_cast
-      
-      sorry
-      
-
-      /- 
-      ↑(ZMod.val ↑↑x) + ↑(ZMod.val ↑x / p ^ α) * ↑p ^ α = ↑x
-      
-      norm_cast
-      rw [ZMod.cast_eq_val]
-      rw [ZMod.val_nat_cast]
-      suffices (x : ZMod (p^(2*α))).val % p ^ α + (x : ZMod (p^(2*α))).val / p ^ α * p ^ α = (x : ZMod (p^(2*α))).val by
-        rw [this]
-        exact val_mod (p ^ (2 * α)) ↑x
-      exact Nat.mod_add_div' (x : ZMod (p^(2*α))).val (p ^ α)
-
-
-      -/
-      
-      sorry
-
--/
-
 /- for the 2nd - 2nd goal of the theorem `sum_bijection` -/
 lemma lt_nat_coe_zmod_coe_int_eq_coe_int (n q : ℕ) [NeZero q] (h : n < q) : ((n : ZMod q) : ℤ) = (n : ℤ) := by 
   rw [← ZMod.nat_cast_val (n : ZMod q)]
@@ -1769,38 +1191,19 @@ lemma val_div_primePow_le [NeZero (p^α : ℕ)] (a : ZMod (p ^ (2 * α))) : a.va
   rw [mul_comm α 2]
   exact ZMod.val_lt a
 
--- I think it's a wrong goal in the first place 
--- useless, delete this later 
-lemma val_div_primePow_le' [NeZero (p^α : ℕ)] (hα : 0 < α) (a : ZMod (p ^ (2 * α))) : a.val / p ^ α ≤ p ^ (α - 1) := by
-  apply Nat.lt_succ.mp
-  rw [Nat.div_lt_iff_lt_mul Fin.size_positive']
-  suffices : Nat.succ (p ^ (α - 1)) ≤ p ^ α
-  · sorry 
-  · rw [Nat.succ_eq_add_one]
-    have nat_prime_hp : Nat.Prime p := by exact Iff.mpr Nat.prime_iff hp
-    have pPrime_le_one : 1 ≤ p ^ (α - 1) := by exact Nat.one_le_pow (α - 1) p (Nat.Prime.pos nat_prime_hp)
-    have h : p ^ (α - 1) + p ^ (α - 1) ≤ p ^ α
-    { rw [← mul_two]
-      nth_rw 2 [← Nat.sub_add_cancel hα]
-      rw [pow_add]
-      rw [← Nat.one_eq_succ_zero]
-      rw [pow_one]
-      exact Nat.mul_le_mul_left (p ^ (α - 1)) (Nat.Prime.two_le nat_prime_hp) } 
-    exact add_le_of_add_le_left h pPrime_le_one
-
 -- it seems like sum_bijection_v1 is not applicable to the below theorems
 -- later I need to rewrite the proof for the below theorem 
 theorem sum_bijection_v2 (f₁ f₂ : ZMod (p^(2*α)) → ℂ) (g₁ g₂ : ℤ → ZMod (p^(2*α))) [NeZero (p^α : ℕ)] (hα : 0 < α) :
     ∑ x : (ZMod (p^(2*α)))ˣ, f₁ (g₁ x) * f₂ (g₂ x) = ∑ yz : (ZMod (p^α))ˣ × ZMod (p^α), f₁ (g₁ (yz.1 + yz.2 * (p^α : ℕ))) * f₂ (g₂ (yz.1 + yz.2 * (p^α : ℕ))) := by
   apply Finset.sum_bij' (fun i _ => (UnitEquivUnitProdZMod hp hα).toFun i) (j := fun j _ => (UnitEquivUnitProdZMod hp hα).invFun j) -- map `i` is toFun and map `j` must be invFun
   · intro a ha
-    exact Finset.mem_univ ((fun i x => Equiv.toFun (UnitEquivUnitProdZMod hp hα) i) a ha)
+    exact Finset.mem_univ ((fun i _ => Equiv.toFun (UnitEquivUnitProdZMod hp hα) i) a ha)
     -- (i := UnitEquivUnitProdZMod.toFun i) (j := UnitEquivUnitProdZMod.invFun j)
     -- refine fun a ha => ?_ a ha
   · intro a ha
     suffices (f : ZMod (p^(2*α)) → ℂ) (g : ℤ → ZMod (p^(2*α))) : 
-    f (g ((a : ZMod (p^(2*α))) : ℤ)) = f (g (↑↑((fun i x => Equiv.toFun (UnitEquivUnitProdZMod hp hα) i) a ha).fst 
-    + ↑((fun i x => Equiv.toFun (UnitEquivUnitProdZMod hp hα) i) a ha).snd * ↑(p ^ α)))
+    f (g ((a : ZMod (p^(2*α))) : ℤ)) = f (g (↑↑((fun i _ => Equiv.toFun (UnitEquivUnitProdZMod hp hα) i) a ha).fst 
+    + ↑((fun i _ => Equiv.toFun (UnitEquivUnitProdZMod hp hα) i) a ha).snd * ↑(p ^ α)))
     { rw [this f₁ g₁, this f₂ g₂] }
     apply congr_arg
     apply congr_arg
@@ -1868,163 +1271,38 @@ theorem sum_bijection_v2 (f₁ f₂ : ZMod (p^(2*α)) → ℂ) (g₁ g₂ : ℤ 
         rw [Int.ediv_self (NeZero.natCast_ne (p ^ α) ℤ)]
         rw [one_mul]
         exact zmod_coe_int_lt (p ^ α) ↑((a : ZMod (p ^ (2 * α))).val / p ^ α)
-
-      /- 
-      ↑(ZMod.val ↑↑x) + ↑(ZMod.val ↑x / p ^ α) * ↑p ^ α = ↑x
-      
-      norm_cast
-      rw [ZMod.cast_eq_val]
-      rw [ZMod.val_nat_cast]
-      suffices (x : ZMod (p^(2*α))).val % p ^ α + (x : ZMod (p^(2*α))).val / p ^ α * p ^ α = (x : ZMod (p^(2*α))).val by
-        rw [this]
-        exact val_mod (p ^ (2 * α)) ↑x
-      exact Nat.mod_add_div' (x : ZMod (p^(2*α))).val (p ^ α)
-      -/
-      
-    /-
-    let H := ((UnitEquivUnitProdZMod hp hα).toFun a)
-    have : (fun i x => Equiv.toFun (UnitEquivUnitProdZMod hp hα) i) a ha = (UnitEquivUnitProdZMod hp hα).toFun a := by
-      exact rfl
-    rw [this]
-    let HH := (UnitEquivUnitProdZMod hp hα).invFun ((UnitEquivUnitProdZMod hp hα).toFun a)
-    -- have HH : ((a : ZMod (p^(2*α))) : ℤ) = ((((UnitEquivUnitProdZMod hp hα).toFun a).fst : ZMod (p^α)) : ℤ) + ((((UnitEquivUnitProdZMod hp hα).toFun a).snd : ZMod (p^α)) : ℤ) * ((p ^ α : ℕ) : ℤ) := by
-    -- this is literally how invFun is defined
-    have HH : (a : ZMod (p^(2*α))).val = (((UnitEquivUnitProdZMod hp hα).toFun a).fst : ZMod (p^α)).val + (((UnitEquivUnitProdZMod hp hα).toFun a).snd : ZMod (p^α)).val * (p ^ α : ℕ) := by
-      (UnitEquivUnitProdZMod hp hα).invFun ((UnitEquivUnitProdZMod hp hα).toFun a)
-    
-    simp only [Equiv.toFun_as_coe_apply]
-
-    exact (UnitEquivUnitProdZMod hp hα).toFun a
-    rw [(UnitEquivUnitProdZMod hp hα).toFun a]
-    -/ 
-
-
   · exact fun a _ => Finset.mem_univ (Equiv.invFun (UnitEquivUnitProdZMod hp hα) a)
   · intro a _
     exact (UnitEquivUnitProdZMod hp hα).left_inv a
   · intro a _
     exact (UnitEquivUnitProdZMod hp hα).right_inv a -- it worked!
   
-  
-/- # Version 1 
-probably trash this version later
--/
--- maybe use `Finset.bUnion`
--- needs rewriting
--- a and b are from the characters ψ χ -- [MulChar_eq_exp] [AddChar_eq_exp]
--- should hFunc : ℤ or ZMod q
--- remember that we have the use the orthogonality property of char by setting hFunc ≡ 0 [ZMOD q]
-def hFunc_v1 (x y r : ℤ) (q : ℕ) (hp : Prime p) : ℤ :=
-  -- let ⟨b, hl, hr⟩ := MulChar_eq_exp (z) (χ) (f₁) (f₀) (x) (y) 
-  (AddChar_eq_exp_a z ψ hp g₁ g₀ y) * (rationalFunc_deriv g₁ g₀ r q) + (MulChar_eq_exp_b z χ hp f₁ f₀ x y) * (rationalFunc_deriv f₁ f₀ r q) * (rationalFunc f₁ f₀ r q : ZMod q)⁻¹
-
--- (MulChar_eq_exp_b z χ hp f₁ f₀ x y)
-
-/- set of all solutions to hFunc-/
--- x₀ : ℤ or ZMod p^α or (ZMod (p^α : ℕ))ˣ 
--- need to make it reply on the variables `a` and `b` from MulChar_eq_exp and AddChar_eq_exp
-def sol_hFunc_v1 (x y r : ℤ) (q : ℕ) : Prop := 
-  hFunc_v1 z χ ψ f₁ f₀ g₁ g₀ x y r q hp ≡ 0 [ZMOD q] ∧ IsUnit ((r : ZMod (p^(2*α))))
-
-def map_sol_hFunc_v1 (x y : ℤ) : ℕ → Prop := 
-  fun r => sol_hFunc_v1 z χ ψ hp f₁ f₀ g₁ g₀ x y r (p^α)
-
-/- lets lean prove `Fintype {r : (ZMod (p^α : ℕ))ˣ | sol_hFunc (z) (χ) (ψ) (f₁) (f₀) (g₁) (g₀) (x) (y) (r) (q) (h)}`-/
-open Classical
-
-def ZMod_sol_hFunc_v1 (x y : ℤ) : Finset ℕ :=
-  (Finset.range (p^(2*α))).filter (map_sol_hFunc_v1 z χ ψ hp f₁ f₀ g₁ g₀ x y)
-
-theorem even_pow_final_formula_v1 (x y x₀ : ℤ) (h : x = y + z * (p^α : ℕ)) :
-    CharSum χ ψ f₁ f₀ g₁ g₀ (p^(2*α)) = (p^α : ℕ) * (∑ r : ZMod_sol_hFunc_v1 z χ ψ hp f₁ f₀ g₁ g₀ x y, χ (rationalFunc f₁ f₀ r (p^α)) * ψ (rationalFunc g₁ g₀ r (p^α))) := by
-  sorry
-
--- needs some rewriting
-/- 
-Set.image 
-Set.mem_image_of_mem
-
-χ '' {r : (ZMod (p^α : ℕ))ˣ | sol_hFunc (z) (χ) (ψ) (f₁) (f₀) (g₁) (g₀) (x) (y) (r) (q) (h)}
--/
-
-/- previous version
-theorem CharSum_in_two_sums (a b x y x₀ : ℤ) (h : x = y + z * (p^α : ℕ)) [NeZero (p^α : ℕ)]:
-    CharSum (χ) (ψ) (p^(2*α)) = ∑ x : {r : (ZMod (p^α : ℕ)) | sol_hFunc z χ ψ hp f₁ f₀ g₁ g₀ x y r (p^α)}, (χ x * ψ x * (∑ z₁ : (ZMod (p^α : ℕ)), eZMod (p^α) ((hFunc z₁ χ ψ f₁ f₀ g₁ g₀ x y x₀ (p^α) hp) * z₁))) := by
-  simp only [CharSum]
--/
-
-/-
-it might be better to define a Finset ℕ equivalent of `{r : (ZMod (p^α : ℕ)) | sol_hFunc z χ ψ hp f₁ f₀ g₁ g₀ x y r (p^α)}` using Finset.filter
-Should I do it using the sum over range?
--/ 
-
-/- Previous version using Set instead of Finset
-theorem CharSum_in_two_sums (a b x y x₀ : ℤ) (h : x = y + z * (p^α : ℕ)) [NeZero (p^α : ℕ)]:
-    CharSum (χ) (ψ) (p^(2*α)) = ∑ x : {r : (ZMod (p^α : ℕ)) | sol_hFunc z χ ψ hp f₁ f₀ g₁ g₀ x y r (p^α)}, (χ x * ψ x * (∑ z₁ : (ZMod (p^α : ℕ)), eZMod (p^α) ((hFunc z₁ χ ψ f₁ f₀ g₁ g₀ x y x₀ (p^α) hp) * z₁))) := by
-  sorry
--/
-
-/- previous (wrong) versions
-theorem CharSum_in_two_sums (a b x y x₀ : ℤ) (h : x = y + z * (p^α : ℕ)) [NeZero (p^α : ℕ)] :
-    CharSum χ ψ f₁ f₀ g₁ g₀ (p^(2*α)) = ∑ r : (ZMod_sol_hFunc z χ ψ hp f₁ f₀ g₁ g₀ x y), (χ (rationalFunc f₁ f₀ r (p^α)) * ψ (rationalFunc g₁ g₀ r (p^α))) * (∑ z₁ : (ZMod (p^α : ℕ)), eZMod (p^α) ((hFunc z₁ χ ψ f₁ f₀ g₁ g₀ x y x₀ (p^α) hp) * z₁)) := by
-  rw [CharSum]
-  
-  sorry
-
-/- inner sum vanishes unless h (y) ≡ 0 (ZMod p^α) -/
--- (hFunc z₁ χ ψ f₁ f₀ g₁ g₀ x y x₀ (p^α) hp)
-theorem even_pow_final_formula (x y x₀ : ℤ) (h : x = y + z * (p^α : ℕ)) :
-    CharSum χ ψ f₁ f₀ g₁ g₀ (p^(2*α)) = 
-    if hFunc z χ ψ f₁ f₀ g₁ g₀ x y x₀ (p^α) hp ≡ 0 [ZMOD p^α] then (p^α : ℕ) * (∑ r : (ZMod (p^α : ℕ))ˣ, χ (rationalFunc f₁ f₀ r (p^α)) * ψ (rationalFunc g₁ g₀ r (p^α)))
-    else 0 := by
-  sorry
--/
-
 /- # Version 2 -/
 -- needs rewriting
 -- a and b are from the characters ψ χ -- [MulChar_eq_exp] [AddChar_eq_exp]
 -- should hFunc : ℤ or ZMod q
 -- remember that we have the use the orthogonality property of char by setting hFunc ≡ 0 [ZMOD q]
-def hFunc (x y: ℤ) (r : ZMod (p^α)) (q : ℕ) (hp : Prime p) : ZMod q :=
+def hFunc (r : ZMod (p^α)) (q : ℕ) (hp : Prime p) : ZMod (p ^ α) :=
   -- let ⟨b, hl, hr⟩ := MulChar_eq_exp (z) (χ) (f₁) (f₀) (x) (y) 
-  (AddChar_eq_exp_a z ψ hp g₁ g₀ y) * (rationalFunc_deriv g₁ g₀ r q) + (MulChar_eq_exp_b z χ hp f₁ f₀ x y) * (rationalFunc_deriv f₁ f₀ r q) * (rationalFunc f₁ f₀ r q : ZMod q)⁻¹
+  (AddChar_eq_exp_a ψ hp g₁ g₀ hα) * (rationalFunc_deriv g₁ g₀ r q) + (MulChar_eq_exp_b χ hp f₁ f₀) * (rationalFunc_deriv f₁ f₀ r q) * (rationalFunc f₁ f₀ r q : ZMod q)⁻¹
 
 -- (MulChar_eq_exp_b z χ hp f₁ f₀ x y)
 
 /- set of all solutions to hFunc-/
 -- x₀ : ℤ or ZMod p^α or (ZMod (p^α : ℕ))ˣ 
 -- need to make it reply on the variables `a` and `b` from MulChar_eq_exp and AddChar_eq_exp
-def sol_hFunc (x y : ℤ) (r : (ZMod (p^α))ˣ) (q : ℕ) : Prop := 
-  hFunc z χ ψ f₁ f₀ g₁ g₀ x y r q hp = 0 
+def sol_hFunc (r : (ZMod (p^α))ˣ) (q : ℕ) : Prop := 
+  hFunc χ ψ f₁ f₀ g₁ g₀ hα r q hp = 0 
 
 -- delete this later
 def IntToZMod (q : ℕ) : ℕ → ZMod q :=
   fun r => (r : ZMod q)
 
-def map_sol_hFunc_v2 (x y : ℤ) : (ZMod (p^α))ˣ → Prop := 
-  fun r => sol_hFunc z χ ψ hp f₁ f₀ g₁ g₀ x y r (p^α)
+def map_sol_hFunc_v2 : (ZMod (p^α))ˣ → Prop := 
+  fun r => sol_hFunc χ ψ hp f₁ f₀ g₁ g₀ hα r (p^α)
 
 /- lets lean prove `Fintype {r : (ZMod (p^α : ℕ))ˣ | sol_hFunc (z) (χ) (ψ) (f₁) (f₀) (g₁) (g₀) (x) (y) (r) (q) (h)}`-/
 open Classical
-
-/- # Ask Kevin : why is it not working
-def ZMod_sol_hFunc_v2 (x y : ℤ) : Finset (ZMod (p ^ α))ˣ :=
-  ((Finset.univ : Finset (ZMod (p^α))ˣ).filter (fun r => sol_hFunc z χ ψ hp f₁ f₀ g₁ g₀ x y r (p^α)))
--/ 
-  
-  -- {r ∈ (ZMod (p^α : ℕ)) }.filter (map_sol_hFunc_v2 z χ ψ hp f₁ f₀ g₁ g₀ x y)
-  
--- (ZMod (p^α))ˣ x {1}
-/-
-Previous version
--- not applicable to the below theorems
-theorem Sum_into_two_sums (f : ZMod (p^(2*α)) → ℂ) (g : ℤ → ZMod (p^(2*α))) [NeZero (p^α : ℕ)] (hα : 0 < α) :
-    ∑ x : (ZMod (p^(2*α)))ˣ, f (g x) = ∑ y : ((ZMod (p^α))ˣ), ∑ z : (ZMod (p^α : ℕ)), f (g (y + z * (p^α : ℕ))) := by
-  rw [sum_bijection hp f g hα]
-  -- Finset.sum_product'
-  rw [Finset.sum_finset_product]
-  simp only [Finset.mem_univ, and_self, Prod.forall, forall_const]
--/
 
 theorem Sum_into_two_sums_v2 (f₁ f₂ : ZMod (p^(2*α)) → ℂ) (g₁ g₂ : ℤ → ZMod (p^(2*α))) [NeZero (p^α : ℕ)] (hα : 0 < α) :
     ∑ x : (ZMod (p^(2*α)))ˣ, f₁ (g₁ x) * f₂ (g₂ x) = ∑ y : ((ZMod (p^α))ˣ), ∑ z : (ZMod (p^α : ℕ)), f₁ (g₁ (y + z * (p^α : ℕ))) * f₂ (g₂ (y + z * (p^α : ℕ))) := by
@@ -2073,95 +1351,14 @@ lemma MulChar_ZMod_twoPow_coe_onePow (p : ℕ) (hp : Prime p) (α : ℕ) (z : ZM
   rw [ZMod.nat_cast_val]
   rw [ZMod.cast_id]
 
-  /- previous version
-  rw [well_defined]
-  apply congr_arg
-  rw [ZMod.cast_eq_val]
-  rw [add_right_inj 1]
-  -- doesn't matter whether (c : ℕ) or (c : ℤ)
-  have H : ∃(c : ℕ), z = ((z : ZMod (p ^ α)).val : ZMod (p ^ (2*α))) + (c : ZMod (p ^ (2*α))) * (p ^ α : ZMod (p ^ (2*α)))
-  { have : NeZero (p^(2*α)) := by exact NeZero_pPow hp
-    rw [ZMod.nat_cast_val]
-    rw [← ZMod.int_cast_cast]
-    norm_cast
-    have hahah : ∃(c₁ : ℕ), (z : ℤ) = ((z : ZMod (p ^ α)) : ℤ) + ((c₁ * p ^ α : ℕ) : ℤ)
-    { simp only [Nat.cast_mul]
-      
-      -- rw [ZMod.int_coe_zmod_eq_iff]
-      sorry
-    }
-
-
-
-    have : ∃(k : ℕ), (z : ZMod (p^α)) = (z : ZMod (p^α)).val 
-
-    
-    have : (z : ZMod (p ^ α)).val = z.val
-    -- zmod.nat_coe_zmod_eq_iff
-    -- ↑n = z ↔ ∃ (k : ℕ), n = z.val + p * k
-    rw [ZMod.cast_eq_val]
-    sorry
-    -- zmod.nat_coe_zmod_eq_iff
-
-  }
-  cases' H with c Hc
-  nth_rw 2 [Hc]
-  rw [add_mul]
-  rw [mul_assoc]
-  rw [← pow_two (p ^ α : ZMod (p ^ (2 * α)))]
-  push_cast
-  rw [← pow_mul]
-  rw [mul_comm α 2]
-  rw [← Nat.cast_pow p (2 * α)]
-  rw [ZMod.nat_cast_self]
-  ring
-  -/ 
-
-/- previous version
-/- this proof is awfully slow. Needed to change the maxHeartbeats -/
-/- # Ask Kevin
-good way to deal with z₁ ? -/
-set_option maxHeartbeats 235000 in
-lemma double_sum_in_deriv_and_exp' (z₁ : ZMod (p^α)) [NeZero (p^α : ℕ)] (hα : 0 < α) (f₀_at_xIsUnit : ∀(x : ℤ), IsUnit ((f₀.eval x : ℤ) : ZMod (p^(2*α)))) (rationalFunc_at_y_isunit : ∀(y : ℤ), IsUnit (rationalFunc (f₁) (f₀) (y) (p^(2*α)) : ZMod (p^(2*α))))
-    (H₁Forf₁ : ∀(y : ℤ), (taylor y f₁).support.Nonempty) (H₀Forf₀ : ∀(y : ℤ), (taylor y f₀).support.Nonempty) (support_le_H₁Forf₁ : ∀(y : ℤ), (taylor y f₁).support.max' (H₁Forf₁ y) > 0) (support_le_H₀Forf₀ : ∀(y : ℤ), (taylor y f₀).support.max' (H₀Forf₀ y) > 0) 
-    (g₀_at_xIsUnit : ∀(y : ℤ), IsUnit ((g₀.eval y : ℤ) : ZMod (p^(2*α)))) (H₁Forg₁ : ∀(y : ℤ), (taylor y g₁).support.Nonempty) (H₀Forg₀ : ∀(y : ℤ), (taylor y g₀).support.Nonempty) (support_le_H₁Forg₁ : ∀(y : ℤ), (taylor y g₁).support.max' (H₁Forg₁ y) > 0) (support_le_H₀Forg₀ : ∀(y : ℤ), (taylor y g₀).support.max' (H₀Forg₀ y) > 0) :
-  ∑ y : (ZMod (p ^ α))ˣ, ∑ z : ZMod (p ^ α), χ (rationalFunc f₁ f₀ (↑↑y + ↑z * ↑(p ^ α)) (p ^ (2 * α))) * ψ (rationalFunc g₁ g₀ (↑↑y + ↑z * ↑(p ^ α)) (p ^ (2 * α))) 
-    = ∑ y : (ZMod (p ^ α))ˣ, ∑ z : ZMod (p ^ α), χ (rationalFunc f₁ f₀ y (p ^ (2 * α))) * eZMod (p^α : ℕ) ((MulChar_eq_exp_b z₁ χ hp f₁ f₀ y y) * ((rationalFunc_deriv (f₁) (f₀) (y) (p^(2*α))) * (rationalFunc (f₁) (f₀) (y) (p^(2*α)) : ZMod (p^(2*α)))⁻¹ * z)) 
-    * ψ (rationalFunc (g₁) (g₀) (y) (p^(2*α))) * eZMod (p^α : ℕ) ((AddChar_eq_exp_a z₁ ψ hp g₁ g₀ y) * ((rationalFunc_deriv (g₁) (g₀) (y) (p^(2*α))) * z)) := by
-    apply congr_arg
-    funext y
-    apply congr_arg
-    funext z
-    -- if I let MulChar_in_y_and_z eat all of its variables, times out
-    rw [MulChar_in_y_and_z z χ f₁ f₀ (((y : ZMod (p^α)) : ℤ) + (z : ℤ) * (p ^ α : ℤ)) ((y : ZMod (p^α)) : ℤ) rfl (f₀_at_xIsUnit (↑↑y + ↑z * ↑(p ^ α))) (rationalFunc_at_y_isunit ↑↑y)]
-    · rw [AddChar_in_y_and_z z ψ g₁ g₀ (((y : ZMod (p^α)) : ℤ) + (z : ℤ) * (p ^ α : ℤ)) ((y : ZMod (p^α)) : ℤ) rfl (g₀_at_xIsUnit (↑↑y + ↑z * ↑(p ^ α)))]
-      · rw [(AddChar_eq_exp_a_spec z ψ hp g₁ g₀ ↑↑y).right]
-        rw [← MulChar_ZMod_twoPow_coe_onePow p hp α (rationalFunc_deriv f₁ f₀ (↑↑y) (p ^ (2 * α)) * (rationalFunc f₁ f₀ (↑↑y) (p ^ (2 * α)))⁻¹ * (z : ZMod (p^(2*α)))) χ]
-        rw [mul_assoc (rationalFunc_deriv f₁ f₀ (↑↑y) (p ^ (2 * α)))]
-        repeat rw [ZMod.cast_mul (dvd_pow_two)]
-        rw [ZModLarger_eq_ZModSmaller (h := (Nat.le_of_lt (pPow_lt_pTwoPow hp hα)))]
-        rw [← mul_assoc (rationalFunc_deriv f₁ f₀ (↑↑y) (p ^ (2 * α)) : ZMod (p^α))]
-        rw [(MulChar_eq_exp_b_spec z χ hp f₁ f₀ ↑↑y ↑↑y).right]
-        rw [← mul_assoc]
-      · exact H₁Forg₁ ↑↑y
-      · exact H₀Forg₀ ↑↑y
-      · exact support_le_H₁Forg₁ ↑↑y
-      · exact support_le_H₀Forg₀ ↑↑y
-    · exact H₁Forf₁ ↑↑y
-    · exact H₀Forf₀ ↑↑y
-    · exact support_le_H₁Forf₁ ↑↑y
-    · exact support_le_H₀Forf₀ ↑↑y
--/
-
-
 /- previous version -/
 set_option maxHeartbeats 235000 in
 lemma double_sum_in_deriv_and_exp [NeZero (p^α : ℕ)] (hα : 0 < α) (f₀_at_xIsUnit : ∀(x : ℤ), IsUnit ((f₀.eval x : ℤ) : ZMod (p^(2*α)))) (rationalFunc_at_y_isunit : ∀(y : ℤ), IsUnit (rationalFunc (f₁) (f₀) (y) (p^(2*α)) : ZMod (p^(2*α))))
     (H₁Forf₁ : ∀(y : ℤ), (taylor y f₁).support.Nonempty) (H₀Forf₀ : ∀(y : ℤ), (taylor y f₀).support.Nonempty) (support_le_H₁Forf₁ : ∀(y : ℤ), (taylor y f₁).support.max' (H₁Forf₁ y) > 0) (support_le_H₀Forf₀ : ∀(y : ℤ), (taylor y f₀).support.max' (H₀Forf₀ y) > 0) 
     (g₀_at_xIsUnit : ∀(y : ℤ), IsUnit ((g₀.eval y : ℤ) : ZMod (p^(2*α)))) (H₁Forg₁ : ∀(y : ℤ), (taylor y g₁).support.Nonempty) (H₀Forg₀ : ∀(y : ℤ), (taylor y g₀).support.Nonempty) (support_le_H₁Forg₁ : ∀(y : ℤ), (taylor y g₁).support.max' (H₁Forg₁ y) > 0) (support_le_H₀Forg₀ : ∀(y : ℤ), (taylor y g₀).support.max' (H₀Forg₀ y) > 0) :
   ∑ y : (ZMod (p ^ α))ˣ, ∑ z : ZMod (p ^ α), χ (rationalFunc f₁ f₀ (↑↑y + ↑z * ↑(p ^ α)) (p ^ (2 * α))) * ψ (rationalFunc g₁ g₀ (↑↑y + ↑z * ↑(p ^ α)) (p ^ (2 * α))) 
-    = ∑ y : (ZMod (p ^ α))ˣ, ∑ z : ZMod (p ^ α), χ (rationalFunc f₁ f₀ y (p ^ (2 * α))) * eZMod (p^α : ℕ) ((MulChar_eq_exp_b z χ hp f₁ f₀ y y) * ((rationalFunc_deriv (f₁) (f₀) (y) (p^(2*α))) * (rationalFunc (f₁) (f₀) (y) (p^(2*α)) : ZMod (p^(2*α)))⁻¹ * z)) 
-    * ψ (rationalFunc (g₁) (g₀) (y) (p^(2*α))) * eZMod (p^α : ℕ) ((AddChar_eq_exp_a z ψ hp g₁ g₀ y) * ((rationalFunc_deriv (g₁) (g₀) (y) (p^(2*α))) * z)) := by
+    = ∑ y : (ZMod (p ^ α))ˣ, ∑ z : ZMod (p ^ α), χ (rationalFunc f₁ f₀ y (p ^ (2 * α))) * eZMod (p^α : ℕ) ((MulChar_eq_exp_b χ hp f₁ f₀) * ((rationalFunc_deriv (f₁) (f₀) (y) (p^(2*α))) * (rationalFunc (f₁) (f₀) (y) (p^(2*α)) : ZMod (p^(2*α)))⁻¹ * z)) 
+    * ψ (rationalFunc (g₁) (g₀) (y) (p^(2*α))) * eZMod (p^α : ℕ) ((AddChar_eq_exp_a ψ hp g₁ g₀ hα) * ((rationalFunc_deriv (g₁) (g₀) (y) (p^(2*α))) * z)) := by
     apply congr_arg
     funext y
     apply congr_arg
@@ -2169,13 +1366,13 @@ lemma double_sum_in_deriv_and_exp [NeZero (p^α : ℕ)] (hα : 0 < α) (f₀_at_
     -- if I let MulChar_in_y_and_z eat all of its variables, times out
     rw [MulChar_in_y_and_z z χ hp f₁ f₀ (((y : ZMod (p^α)) : ℤ) + (z : ℤ) * (p ^ α : ℤ)) ((y : ZMod (p^α)) : ℤ) rfl (f₀_at_xIsUnit (↑↑y + ↑z * ↑(p ^ α))) (rationalFunc_at_y_isunit ↑↑y)]
     · rw [AddChar_in_y_and_z z ψ hp g₁ g₀ (((y : ZMod (p^α)) : ℤ) + (z : ℤ) * (p ^ α : ℤ)) ((y : ZMod (p^α)) : ℤ) rfl (g₀_at_xIsUnit (↑↑y + ↑z * ↑(p ^ α)))]
-      · rw [(AddChar_eq_exp_a_spec z ψ hp g₁ g₀ ↑↑y).right]
+      · rw [(AddChar_eq_exp_a_spec ψ hp g₁ g₀ hα).right]
         rw [← MulChar_ZMod_twoPow_coe_onePow p hp α (rationalFunc_deriv f₁ f₀ (↑↑y) (p ^ (2 * α)) * (rationalFunc f₁ f₀ (↑↑y) (p ^ (2 * α)))⁻¹ * (z : ZMod (p^(2*α)))) χ]
         rw [mul_assoc (rationalFunc_deriv f₁ f₀ (↑↑y) (p ^ (2 * α)))]
         repeat rw [ZMod.cast_mul (dvd_pow_two)]
         rw [ZModLarger_eq_ZModSmaller (h := (Nat.le_of_lt (pPow_lt_pTwoPow hp hα)))]
         rw [← mul_assoc (rationalFunc_deriv f₁ f₀ (↑↑y) (p ^ (2 * α)) : ZMod (p^α))]
-        rw [(MulChar_eq_exp_b_spec z χ hp f₁ f₀ ↑↑y ↑↑y).right]
+        rw [(MulChar_eq_exp_b_spec χ hp f₁ f₀).right]
         rw [← mul_assoc]
       · exact H₁Forg₁ ↑↑y
       · exact H₀Forg₀ ↑↑y
@@ -2187,14 +1384,18 @@ lemma double_sum_in_deriv_and_exp [NeZero (p^α : ℕ)] (hα : 0 < α) (f₀_at_
     · exact support_le_H₁Forf₁ ↑↑y
     · exact support_le_H₀Forf₀ ↑↑y
     · exact hα
+    done
 
-/- separated this proof out from the previous theorem because it times out -/
+/- separated this proof out from the previous theorem because it times out 
+
+### NEED TO PROVE
+-/
 theorem double_sum_in_deriv_and_exp_after_rearrang [NeZero (p^α : ℕ)] (hα : 0 < α) (f₀_at_xIsUnit : ∀(x : ℤ), IsUnit ((f₀.eval x : ℤ) : ZMod (p^(2*α)))) (rationalFunc_at_y_isunit : ∀(y : ℤ), IsUnit (rationalFunc (f₁) (f₀) (y) (p^(2*α)) : ZMod (p^(2*α))))
     (H₁Forf₁ : ∀(y : ℤ), (taylor y f₁).support.Nonempty) (H₀Forf₀ : ∀(y : ℤ), (taylor y f₀).support.Nonempty) (support_le_H₁Forf₁ : ∀(y : ℤ), (taylor y f₁).support.max' (H₁Forf₁ y) > 0) (support_le_H₀Forf₀ : ∀(y : ℤ), (taylor y f₀).support.max' (H₀Forf₀ y) > 0) 
     (g₀_at_xIsUnit : ∀(y : ℤ), IsUnit ((g₀.eval y : ℤ) : ZMod (p^(2*α)))) (H₁Forg₁ : ∀(y : ℤ), (taylor y g₁).support.Nonempty) (H₀Forg₀ : ∀(y : ℤ), (taylor y g₀).support.Nonempty) (support_le_H₁Forg₁ : ∀(y : ℤ), (taylor y g₁).support.max' (H₁Forg₁ y) > 0) (support_le_H₀Forg₀ : ∀(y : ℤ), (taylor y g₀).support.max' (H₀Forg₀ y) > 0) :
   ∑ y : (ZMod (p ^ α))ˣ, ∑ z : ZMod (p ^ α), χ (rationalFunc f₁ f₀ (↑↑y + ↑z * ↑(p ^ α)) (p ^ (2 * α))) * ψ (rationalFunc g₁ g₀ (↑↑y + ↑z * ↑(p ^ α)) (p ^ (2 * α))) 
     = ∑ y : (ZMod (p ^ α))ˣ, χ (rationalFunc f₁ f₀ y (p ^ (2 * α))) * ψ (rationalFunc (g₁) (g₀) (y) (p^(2*α))) 
-    * ∑ z : ZMod (p ^ α), eZMod (p^α : ℕ) (hFunc z χ ψ f₁ f₀ g₁ g₀ y y y (p^(2*α) : ℕ) hp * z) := by
+    * ∑ z : ZMod (p ^ α), eZMod (p^α : ℕ) ((hFunc χ ψ f₁ f₀ g₁ g₀ hα y (p ^ (2 * α)) hp) * z) := by
     -- eZMod (p^α : ℕ) ((AddChar_eq_exp_a z ψ hp g₁ g₀ y) * ((rationalFunc_deriv (g₁) (g₀) (y) (p^(2*α))) * z))
     rw [double_sum_in_deriv_and_exp χ ψ hp f₁ f₀ g₁ g₀ hα f₀_at_xIsUnit rationalFunc_at_y_isunit H₁Forf₁ H₀Forf₀ support_le_H₁Forf₁ support_le_H₀Forf₀ g₀_at_xIsUnit H₁Forg₁ H₀Forg₀ support_le_H₁Forg₁ support_le_H₀Forg₀]
     apply congr_arg
@@ -2203,80 +1404,15 @@ theorem double_sum_in_deriv_and_exp_after_rearrang [NeZero (p^α : ℕ)] (hα : 
     apply congr_arg
     funext z
     rw [mul_assoc (χ (rationalFunc f₁ f₀ (↑↑y) (p ^ (2 * α))) : ℂ)]
-    rw [mul_comm (eZMod (p ^ α) (↑(MulChar_eq_exp_b z χ hp f₁ f₀ ↑↑y ↑↑y) * (↑(rationalFunc_deriv f₁ f₀ (↑↑y) (p ^ (2 * α))) * ↑(rationalFunc f₁ f₀ (↑↑y) (p ^ (2 * α)))⁻¹ * z)))]
+    rw [mul_comm (eZMod (p ^ α) (↑(MulChar_eq_exp_b χ hp f₁ f₀) * (↑(rationalFunc_deriv f₁ f₀ (↑↑y) (p ^ (2 * α))) * ↑(rationalFunc f₁ f₀ (↑↑y) (p ^ (2 * α)))⁻¹ * z)))]
     rw [mul_assoc]
     rw [mul_assoc]
-    rw [mul_comm (eZMod (p ^ α) (↑(MulChar_eq_exp_b z χ hp f₁ f₀ ↑↑y ↑↑y) * (↑(rationalFunc_deriv f₁ f₀ (↑↑y) (p ^ (2 * α))) * ↑(rationalFunc f₁ f₀ (↑↑y) (p ^ (2 * α)))⁻¹ * z)))]
+    rw [mul_comm (eZMod (p ^ α) (↑(MulChar_eq_exp_b χ hp f₁ f₀) * (↑(rationalFunc_deriv f₁ f₀ (↑↑y) (p ^ (2 * α))) * ↑(rationalFunc f₁ f₀ (↑↑y) (p ^ (2 * α)))⁻¹ * z)))]
     rw [← eZMod_add]
     rw [hFunc]
-    rw [ZMod.cast_add (dvd_pow_two)]
-    repeat rw [ZMod.cast_mul (dvd_pow_two)]
-    repeat rw [ZMod.cast_nat_cast (dvd_pow_two)]
     rw [add_mul]
-    /- rearranging the lhs -/
     repeat rw [← mul_assoc]
-    done
-
-    /-
-    def hFunc (x y: ℤ) (r : ZMod (p^α)) (q : ℕ) (hp : Prime p) : ZMod q :=
-  -- let ⟨b, hl, hr⟩ := MulChar_eq_exp (z) (χ) (f₁) (f₀) (x) (y) 
-  (AddChar_eq_exp_a z ψ hp g₁ g₀ y) * (rationalFunc_deriv g₁ g₀ r q) + (MulChar_eq_exp_b z χ hp f₁ f₀ x y) * (rationalFunc_deriv f₁ f₀ r q) * (rationalFunc f₁ f₀ r q : ZMod q)⁻¹
     
-    -/
-
-/-
-theorem MulChar_eq_exp_b_spec (x y : ℤ) :
-   χ' (χ) ((rationalFunc_deriv (f₁) (f₀) (y) (p^(2*α))) * (rationalFunc (f₁) (f₀) (x) (p^(2*α)) : ZMod (p^(2*α)))⁻¹ * z) 
-    = eZMod (p^α : ℕ) ((MulChar_eq_exp_b z χ hp f₁ f₀ x y) * ((rationalFunc_deriv (f₁) (f₀) (y) (p^(2*α))) * (rationalFunc (f₁) (f₀) (x) (p^(2*α)) : ZMod (p^(2*α)))⁻¹ * z)) :=
-  (MulChar_eq_exp z χ hp f₁ f₀ x y).choose_spec
-
-χ (1 + rationalFunc_deriv f₁ f₀ y (p ^ (2 * α)) * (rationalFunc f₁ f₀ y (p ^ (2 * α)))⁻¹ * ↑z * ↑(p ^ α)) 
--/
-
-
-/- previous version
-/- this proof is awfully slow. Needed to change the maxHeartbeats -/
-set_option maxHeartbeats 230000 in
-theorem double_sum_in_deriv_and_exp' [NeZero (p^α : ℕ)] (f₀_at_xIsUnit : ∀(x : ℤ), IsUnit ((f₀.eval x : ℤ) : ZMod (p^(2*α)))) (rationalFunc_at_y_isunit : ∀(y : ℤ), IsUnit (rationalFunc (f₁) (f₀) (y) (p^(2*α)) : ZMod (p^(2*α))))
-    (H₁Forf₁ : ∀(y : ℤ), (taylor y f₁).support.Nonempty) (H₀Forf₀ : ∀(y : ℤ), (taylor y f₀).support.Nonempty) (support_le_H₁Forf₁ : ∀(y : ℤ), (taylor y f₁).support.max' (H₁Forf₁ y) > 0) (support_le_H₀Forf₀ : ∀(y : ℤ), (taylor y f₀).support.max' (H₀Forf₀ y) > 0) 
-    (g₀_at_xIsUnit : ∀(y : ℤ), IsUnit ((g₀.eval y : ℤ) : ZMod (p^(2*α)))) (H₁Forg₁ : ∀(y : ℤ), (taylor y g₁).support.Nonempty) (H₀Forg₀ : ∀(y : ℤ), (taylor y g₀).support.Nonempty) (support_le_H₁Forg₁ : ∀(y : ℤ), (taylor y g₁).support.max' (H₁Forg₁ y) > 0) (support_le_H₀Forg₀ : ∀(y : ℤ), (taylor y g₀).support.max' (H₀Forg₀ y) > 0) :
-  ∑ y : (ZMod (p ^ α))ˣ, ∑ z : ZMod (p ^ α), χ (rationalFunc f₁ f₀ (↑↑y + ↑z * ↑(p ^ α)) (p ^ (2 * α))) * ψ (rationalFunc g₁ g₀ (↑↑y + ↑z * ↑(p ^ α)) (p ^ (2 * α))) 
-    = ∑ y : (ZMod (p ^ α))ˣ, ∑ z : ZMod (p ^ α), χ (rationalFunc f₁ f₀ y (p ^ (2 * α))) * χ (1 + rationalFunc_deriv f₁ f₀ y (p ^ (2 * α)) * (rationalFunc f₁ f₀ y (p ^ (2 * α)))⁻¹ * ↑z * ↑(p ^ α)) 
-    * ψ (rationalFunc (g₁) (g₀) (y) (p^(2*α))) * eZMod (p^α : ℕ) ((AddChar_eq_exp_a z ψ hp g₁ g₀ y) * ((rationalFunc_deriv (g₁) (g₀) (y) (p^(2*α))) * z)) := by
-    apply congr_arg
-    funext y
-    apply congr_arg
-    funext z
-    -- if I let MulChar_in_y_and_z eat all of its variables, times out
-    rw [MulChar_in_y_and_z z χ f₁ f₀ (((y : ZMod (p^α)) : ℤ) + (z : ℤ) * (p ^ α : ℤ)) ((y : ZMod (p^α)) : ℤ) rfl (f₀_at_xIsUnit (↑↑y + ↑z * ↑(p ^ α))) (rationalFunc_at_y_isunit ↑↑y)]
-    · rw [AddChar_in_y_and_z z ψ g₁ g₀ (((y : ZMod (p^α)) : ℤ) + (z : ℤ) * (p ^ α : ℤ)) ((y : ZMod (p^α)) : ℤ) rfl (g₀_at_xIsUnit (↑↑y + ↑z * ↑(p ^ α)))]
-      · rw [(AddChar_eq_exp_a_spec z ψ hp g₁ g₀ ↑↑y).right]
-        ring
-      · exact H₁Forg₁ ↑↑y
-      · exact H₀Forg₀ ↑↑y
-      · exact support_le_H₁Forg₁ ↑↑y
-      · exact support_le_H₀Forg₀ ↑↑y
-    · exact H₁Forf₁ ↑↑y
-    · exact H₀Forf₀ ↑↑y
-    · exact support_le_H₁Forf₁ ↑↑y
-    · exact support_le_H₀Forf₀ ↑↑y
-  -/
-
-  /-
-  lemma AddChar_in_y_and_z (x y : ℤ) (H₁ : (taylor y g₁).support.Nonempty) (H₀ : (taylor y g₀).support.Nonempty) (support_le_H₁ : (taylor y g₁).support.max' H₁ > 0) (support_le_H₀ : (taylor y g₀).support.max' H₀ > 0) (g₀_at_xIsUnit : IsUnit ((g₀.eval x : ℤ) : ZMod (p^(2*α)))):
-    ψ (rationalFunc (g₁) (g₀) (x) (p^(2*α))) = ψ (rationalFunc (g₁) (g₀) (y) (p^(2*α))) * ψ ((rationalFunc_deriv (g₁) (g₀) (y) (p^(2*α))) * z * (p^α : ℕ)) := by
-  -/
-
-  /-
-  theorem AddChar_eq_exp_a_spec :
-    (AddChar_eq_exp_a z ψ hp g₁ g₀ y) < p^(2*α) ∧ ψ ((rationalFunc_deriv (g₁) (g₀) (y) (p^(2*α))) * z * (p^α : ℕ)) = eZMod (p^α : ℕ) ((AddChar_eq_exp_a z ψ hp g₁ g₀ y) * ((rationalFunc_deriv (g₁) (g₀) (y) (p^(2*α))) * z)) :=
-  -/
-
-/-
-if hFunc (z) (χ) (ψ) (f₁) (f₀) (g₁) (g₀) (x) (y) (x₀) (q) (h) ≡ 0 [ZMOD p^α] then (p^α : ℕ) * (∑ x : (ZMod (p^α : ℕ))ˣ, χ x * ψ x)
-    else 0 := by
--/
-
 /- there must be an easier proof -/
 instance (n : ℕ) (h : n ≥ 1): ZMod (n) = Fin (n) := by
   have h := Nat.exists_eq_add_of_le h 
@@ -2292,37 +1428,6 @@ lemma ZMod_eq_Fin_NeZero (n : ℕ) [NeZero n] : ZMod (n) = Fin (n) := by
   rw [hk]
   rw [add_comm]
   rfl
-
--- delete this later
-instance [NeZero (p^α)] : ZMod (p ^ α) = Fin (p ^ α) := by 
-  exact ZMod_eq_Fin_NeZero (p ^ α)
-
-/- 
-/- required for the second goal of the below theorem `eZMod_orthogonality`-/
-lemma complex_div_eq_coe_int_imp_dvd (a b : ℂ) (c : ℤ) : 
-    a / b = c → b ∣ a := by 
-  
-  sorry
-
-lemma complex_dvd_imp_eq_zero (q : ℕ) (m : ZMod q) : 
-    (q : ℂ) ∣ (m.val : ℂ) → m = 0 := by 
-  rw [← ZMod.val_eq_zero]
-  intro hdvd
-  -- rw [← Nat.cast_eq_zero {R := ℂ} {n := m.val}]
-  rw [dvd_iff_exists_eq_mul_left] at hdvd
-  cases' hdvd with c hdvd
-  
-
-  have : (m.val : ℂ) = 0 := by exact Iff.mpr Nat.cast_eq_zero ⊢
-  
-  
-  rw [← Nat.cast_eq_zero]
-  -- rw [← ofNat_eq_zero]
-
-  
-  sorry
--/ 
-
  
 /- required for the second goal of the below theorem `eZMod_orthogonality`-/
 lemma val_dvd_iff_eq_zero (q : ℕ) (m : ZMod q) [NeZero q] : 
@@ -2336,21 +1441,6 @@ lemma val_dvd_iff_eq_zero (q : ℕ) (m : ZMod q) [NeZero q] :
     rw [hm]
     use 0
     rfl
-
-/- previous version
-lemma int_coe_val_dvd_iff_eq_zero (q : ℕ) (m : ZMod q) [NeZero q] : 
-    (q : ℤ) ∣ (m.val : ℤ) ↔ m = 0 := by
-  rw [← ZMod.val_eq_zero]
-  -- rw [dvd_iff_exists_eq_mul_left]
-  apply Iff.intro
-  · intro hc
-    norm_cast at hc
-    exact Nat.eq_zero_of_dvd_of_lt hc (ZMod.val_lt m)
-  · intro hm
-    rw [hm]
-    use 0
-    rfl
--/
 
 lemma eZMod_orthogonality (m : ZMod (p^α)) [NeZero (p^α)] : 
     ∑ z : ZMod (p ^ α), eZMod (p^α : ℕ) (m * z) = if m = 0 then (p^α : ℂ) else (0 : ℂ) := by
@@ -2384,14 +1474,7 @@ lemma eZMod_orthogonality (m : ZMod (p^α)) [NeZero (p^α)] :
         have := Iff.mpr dvd_iff_exists_eq_mul_left exists_hmn
         norm_cast at this }
       rw [val_dvd_iff_eq_zero] at hdvd
-      tauto
-
-      /- previous version
-      have hdvd := complex_div_eq_coe_int_imp_dvd (m.val : ℂ) (p ^ α : ℂ) n hmn
-      have := complex_dvd_iff_eq_zero (p ^ α) m
-      tauto
-      -/
-    }
+      tauto }
     have cexp_mul_eZMod_eq_eZMod : eZMod (p ^ α) m * ∑ z : ZMod (p ^ α), eZMod (p^α : ℕ) (m * z) = ∑ z : ZMod (p ^ α), eZMod (p^α : ℕ) (m * z)
     { rw [Finset.mul_sum]
       apply Finset.sum_bij (fun i _ ↦ i + 1)
@@ -2415,27 +1498,6 @@ lemma eZMod_orthogonality (m : ZMod (p^α)) [NeZero (p^α)] :
     rw [sub_eq_zero] at cexp_mul_eZMod_eq_eZMod
     tauto
 
-    /- Previous attempt 
-    -- rw [Finset.sum_const_zero]
-    have : ∑ z : ZMod (p ^ α), eZMod (p^α : ℕ) (m * z) = ∑ z : Fin (p^α), eZMod (p^α : ℕ) (m * z)
-    { apply Finset.sum_congr
-
-      sorry
-    }
-    have : ∑ z : ZMod (p ^ α), eZMod (p^α : ℕ) (m * z) = ∑ z in range (p^α), eZMod (p^α : ℕ) (m * z)
-    { rw [this]
-      
-      sorry
-    }
-    rw [this]
-    simp only [eZMod]
-    -- rw [geom_sum_eq]
-    -- change (ZMod (p^α)) with (Fin (p^α))
-    simp_rw [mul_div_assoc]
-    sorry
-    -/
-
-
 example [NeZero (p^α)] : 
   ∑ z : ZMod (p ^ α), z = ∑ z_1 : ZMod (p ^ α), z_1 := by
   refine congrArg (Finset.sum Finset.univ) rfl
@@ -2443,11 +1505,10 @@ example [NeZero (p^α)] :
 /- I need to find a way to have ∀(z : ZMod (p^α)), hFunc and all related lemmas hold so that those lemmas don't need to eat a variable z 
 Answer : Use theorem `MulChar_additive_eq_exp_for_all` 
 -/
-lemma eZMod_hFunc_orthogonality [NeZero (p^α)] (z₁ : ZMod (p^α)) : 
-    ∑ z : ZMod (p ^ α), eZMod (p^α : ℕ) (hFunc z χ ψ f₁ f₀ g₁ g₀ y y y (p^(2*α) : ℕ) hp * z) 
-    = if (hFunc z₁ χ ψ f₁ f₀ g₁ g₀ y y y (p^(2*α) : ℕ) hp : ZMod (p^α)) = 0 then (p^α : ℂ) else (0 : ℂ) := by
-  -- exact eZMod_orthogonality (hFunc z₁ χ ψ f₁ f₀ g₁ g₀ y y y (p^(2*α) : ℕ) hp : ZMod (p^α))
-  sorry
+lemma eZMod_hFunc_orthogonality (y : ZMod (p ^ α)) [NeZero (p^α)] : 
+    ∑ z : ZMod (p ^ α), eZMod (p^α : ℕ) (hFunc χ ψ f₁ f₀ g₁ g₀ hα y (p ^ (2 * α)) hp * z) 
+    = if (hFunc χ ψ f₁ f₀ g₁ g₀ hα y (p ^ (2 * α)) hp : ZMod (p^α)) = 0 then (p^α : ℂ) else (0 : ℂ) := by
+  exact eZMod_orthogonality (hFunc χ ψ f₁ f₀ g₁ g₀ hα y (p ^ (2 * α)) hp : ZMod (p^α))
 
 /- 
 inner sum vanishes unless h (y) ≡ 0 [ZMOD p^α] 
@@ -2455,173 +1516,25 @@ By the theorem `Finset.sum_empty` the sum equals zero when h (y) ≡ 0 [ZMOD p^�
 -/
 -- (hFunc z₁ χ ψ f₁ f₀ g₁ g₀ x y x₀ (p^α) hp)
 -- (h : x = y + z * (p^α : ℕ))
-theorem even_pow_final_formula (z₁ : ZMod (p^α)) [NeZero (p^α : ℕ)] (hα : 0 < α) (f₀_at_xIsUnit : ∀(x : ℤ), IsUnit ((f₀.eval x : ℤ) : ZMod (p^(2*α)))) (rationalFunc_at_y_isunit : ∀(y : ℤ), IsUnit (rationalFunc (f₁) (f₀) (y) (p^(2*α)) : ZMod (p^(2*α))))
+theorem even_pow_final_formula [NeZero (p^α : ℕ)] (hα : 0 < α) (f₀_at_xIsUnit : ∀(x : ℤ), IsUnit ((f₀.eval x : ℤ) : ZMod (p^(2*α)))) (rationalFunc_at_y_isunit : ∀(y : ℤ), IsUnit (rationalFunc (f₁) (f₀) (y) (p^(2*α)) : ZMod (p^(2*α))))
     (H₁Forf₁ : ∀(y : ℤ), (taylor y f₁).support.Nonempty) (H₀Forf₀ : ∀(y : ℤ), (taylor y f₀).support.Nonempty) (support_le_H₁Forf₁ : ∀(y : ℤ), (taylor y f₁).support.max' (H₁Forf₁ y) > 0) (support_le_H₀Forf₀ : ∀(y : ℤ), (taylor y f₀).support.max' (H₀Forf₀ y) > 0) 
     (g₀_at_xIsUnit : ∀(y : ℤ), IsUnit ((g₀.eval y : ℤ) : ZMod (p^(2*α)))) (H₁Forg₁ : ∀(y : ℤ), (taylor y g₁).support.Nonempty) (H₀Forg₀ : ∀(y : ℤ), (taylor y g₀).support.Nonempty) (support_le_H₁Forg₁ : ∀(y : ℤ), (taylor y g₁).support.max' (H₁Forg₁ y) > 0) (support_le_H₀Forg₀ : ∀(y : ℤ), (taylor y g₀).support.max' (H₀Forg₀ y) > 0) :
-    CharSum χ ψ f₁ f₀ g₁ g₀ (p^(2*α)) = (p^α : ℕ) * (∑ r in ((Finset.univ : Finset (ZMod (p^α))ˣ).filter (fun r => sol_hFunc z χ ψ hp f₁ f₀ g₁ g₀ x y r (p^α))), 
-    χ (rationalFunc f₁ f₀ ((r : (ZMod (p^α))ˣ) : ℤ) (p^α)) * ψ (rationalFunc g₁ g₀ ((r : (ZMod (p^α))ˣ) : ℤ) (p^α))) := by
+    CharSum χ ψ f₁ f₀ g₁ g₀ (p^(2*α)) = (p^α : ℕ) * (∑ r in ((Finset.univ : Finset (ZMod (p^α))ˣ).filter (fun r => sol_hFunc χ ψ hp f₁ f₀ g₁ g₀ hα r (p^ (2 * α)))), 
+    χ (rationalFunc f₁ f₀ ((r : (ZMod (p^α))ˣ) : ℤ) (p ^ (2 * α))) * ψ (rationalFunc g₁ g₀ ((r : (ZMod (p^α))ˣ) : ℤ) (p ^ (2 * α)))) := by
   rw [CharSum]
   simp only [ZMod.cast_id', id_eq]
   rw [Sum_into_two_sums_v2 hp (fun n => χ n) (fun n => ψ n) (fun n => rationalFunc f₁ f₀ n (p^(2*α))) (fun n => rationalFunc g₁ g₀ n (p^(2*α))) hα] 
   -- rw [MulChar_in_y_and_z z χ f₁ f₀ (((y : ZMod (p^α)) : ℤ) + (z : ℤ) * (p ^ α : ℤ)) ((y : ZMod (p^α)) : ℤ)]
   rw [double_sum_in_deriv_and_exp_after_rearrang χ ψ hp f₁ f₀ g₁ g₀ hα f₀_at_xIsUnit rationalFunc_at_y_isunit H₁Forf₁ H₀Forf₀ support_le_H₁Forf₁ support_le_H₀Forf₀ g₀_at_xIsUnit H₁Forg₁ H₀Forg₀ support_le_H₁Forg₁ support_le_H₀Forg₀]
-
-
-
-  
   rw [Finset.sum_filter]
-  have H := AddChar_eq_exp_a_spec z ψ hp g₁ g₀ y
+  rw [Finset.mul_sum]
+  apply congr_arg
+  funext y
+  simp only [sol_hFunc]
+  rw [eZMod_hFunc_orthogonality]
+  split_ifs
+  · ring
+  · ring
 
 
-
-
-
-  
-  -- apply Finset.sum_congr_set
-  
-
-  -- at the end need to use theorem `Finset.sum_filter`
-  -- I saw good instances to reference (for example, `huang_degree_theorem`)
-  sorry
-
-
-
-
-/- 
-def CharSum (q : ℕ) : ℂ :=
-  ∑ x : (ZMod q)ˣ, χ (rationalFunc f₁ f₀ x q) * ψ (rationalFunc g₁ g₀ x q)
--/
-
-
-
-
-
-
-
-
-/- old codes
--- figured out the proof by referencing the def `castHom` and its corresponding theorems from the doc `mathlib4/Mathlib/Data/ZMod/Basic.lean`
-
-def ZModIsUnit (q : ℕ): ℕ → Prop :=
-  fun r => IsUnit (r : ZMod q)
-
-lemma bruh :
-    ∑ x : (ZMod (p^(2*α))), χ (rationalFunc f₁ f₀ x (p^(2*α))) * ψ (rationalFunc g₁ g₀ x (p^(2*α))) = ∑ x : (Finset.range (p^(2*α))), χ (rationalFunc f₁ f₀ x (p^(2*α))) * ψ (rationalFunc g₁ g₀ x (p^(2*α))) := by
-  sorry
-
-/- rewrite the sum over (ZMod p^(2*α))ˣ to over Finset ℕ -/
-/- Goal One -/
-lemma CharSum_over_ZMod_to_Range (a b x y x₀ : ℤ) :
-    CharSum χ ψ f₁ f₀ g₁ g₀ (p^(2*α)) = ∑ x : (Finset.range (p^(2*α))).filter (ZModIsUnit (p^(2*α))), χ (rationalFunc f₁ f₀ x (p^(2*α))) * ψ (rationalFunc g₁ g₀ x (p^(2*α))) := by
-  rw [CharSum]
-  sorry
-
-theorem CharSum_in_two_sums' (a b x y : ℤ) (h : x = y + z * (p^α : ℕ)) [NeZero (p^α : ℕ)] :
-    CharSum χ ψ f₁ f₀ g₁ g₀ (p^(2*α)) = ∑ y₀ : (ZMod (p^α))ˣ, (χ (rationalFunc f₁ f₀ y₀ (p^α)) * ψ (rationalFunc g₁ g₀ y₀ (p^α))) * (∑ z₀ : (ZMod (p^α : ℕ)), eZMod (p^α) ((hFunc z χ ψ f₁ f₀ g₁ g₀ x y y₀ (p^α) hp) * z₀)) := by
-  rw [CharSum]
-  sorry
-
-
-/- 
-inner sum vanishes unless h (y) ≡ 0 [ZMOD p^α] 
-By the theorem `Finset.sum_empty` the sum equals zero when h (y) ≡ 0 [ZMOD p^α] has no solution
--/
--- (hFunc z₁ χ ψ f₁ f₀ g₁ g₀ x y x₀ (p^α) hp)
-theorem even_pow_final_formula' (x y x₀ : ℤ) (h : x = y + z * (p^α : ℕ)) :
-    CharSum χ ψ f₁ f₀ g₁ g₀ (p^(2*α)) = (p^α : ℕ) * (∑ r : (ZMod_sol_hFunc z χ ψ hp f₁ f₀ g₁ g₀ x y), χ (rationalFunc f₁ f₀ r (p^α)) * ψ (rationalFunc g₁ g₀ r (p^α))) := by
-  sorry
--/ 
-
-
-/- # Strategy
-1. Show that the Finset created by the variable `x : (ZMod (p^(2*α)))ˣ` and the Finset of `y + z * p^α` generated by `y : (ZMod p^α)ˣ` and `z : ZMod p^α`
-2. To achieve Goal 1, need to show that the sum over the Finset generated by `x : (ZMod (p^(2*α)))ˣ` is equal to the sum over `x : (ZMod (p^(2*α)))ˣ`
-   Show something similar for the sum over the Finset of `y + z * p^α`
-3. 
-
-
--/
-
-
-
-
-
-
-
-
-
-
-
-
-/- # Caution
-When you later decide to change the definiton of ratfunc we have, you need to make sure that it will be mapped to ZMod q 
-otherwise we cannot put it in the characters we have defined previously
-
--/
-
-/- source
-Taylor series
-1. Mathlib/Data/Polynomial/Taylor.lean
-2. Mathlib/Analysis/Calculus/Taylor.lean
-3. Mathlib/FieldTheory/Laurent.lean
-4. Mathlib/Data/Polynomial/HasseDeriv.lean
-5. FieldTheory/RatFunc.lean has the section Laurent series
--/
-
-/- # Brainstorm
-I think I need to use the theorem `taylor_mean_remainder_lagrange`
-
--/
-
-/- # Overall proof
-1. Obtain the taylor expansion with remainder for the denominator and numerator of a rational function 
-2. Obtain the expressions for the denominator and numerator mod p^(2*α)
-3. Obtain the expression for the rational function mod p^(2*α) by dividing the numerator and denominator
-4. Write the expression in terms of the function f and its derivative
-
--/
-
-/- # Potential troubles
-1. Obtain the taylor expansion with remainder for the denominator and numerator of a rational function 
-2. Obtain the expressions for the denominator and numerator mod p^(2*α):
-   Showing the coefficients can be expressed as integers mod p^(2*α)
-3. Obtain the expression for the rational function mod p^(2*α) by dividing the numerator and denominator:
-   - Not sure how the division of polynomials work
-   - Especially mod p^(2*α)
-4. Write the expression in terms of the function f and its derivative:
-   Need to look up how the derivative of the rational function is defined
-5. Summing over the variables
-   Q. Is it possible to sum over the variable X for the polynomial.X?
-   A. Maybe p.sum f will do its job
-   Also is it possible to make the expression X = y + z*p^α 
-   I think polynomial.eval will do its job : Do something like ∑(i : ZMod q), f.denom.eval i
--/
-
-/- # List of theorems we need
-1. Proof that p doesn't divide f₀(y) by the assumption that p doesn't divide f₀(x)
-2. 
-
--/
-
-/- # TODO
-1. IMPO : Need to make the statements for the whole proof before starting anything; need to make sure every theorem comes together seamlessly
-2. Think about whether f : RatFunc ℚ is a good idea
-3. Get rid of repetitive variables
-4. Make sure no theorem will take in too many variables when calling for it
-5. Deal with the theorem `poly_taylor_eval`
-6. Think whether I have assigned the best type (i.e., ℤ, (ZMod q), (ZMod q)ˣ or ℕ in some cases) for each variable and the range of functions
-7. 
--/
-
-/- # Ask Kevin
-1. How to import other files
-2. Whether correct: my approach of having the polynomials as an input rather than a rational function
-3. 
-
--/
-
-/- # How fractions work
-Fractions are reduced by clearing common denominators before evaluating:
-`eval id 1 ((X^2 - 1) / (X - 1)) = eval id 1 (X + 1) = 2`, not `0 / 0 = 0`.
--/
 

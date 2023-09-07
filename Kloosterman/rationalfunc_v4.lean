@@ -19,10 +19,17 @@ Keep in mind
 when using the theorems for the taylor series and Kloosterman sum at the same time 
 -/
 
-variable {p : ℕ} {α : ℕ} (z : ZMod (p^α : ℕ)) (χ : MulChar (ZMod (p^(2*α) : ℕ)) ℂ) (ψ : AddChar (ZMod (p^(2*α) : ℕ)) ℂ) [NeZero (p^(2*α) : ℕ)] [NeZero (p^α : ℕ)] (hp : Prime p)
+variable {p : ℕ} {α : ℕ} (z : ZMod (p^α : ℕ)) (χ : MulChar (ZMod (p^(2*α) : ℕ)) ℂ) (ψ : AddChar (ZMod (p^(2*α) : ℕ)) ℂ) [pp : Fact p.Prime]
 -- (q : ℕ) (x : ZMod q) (y : ℤ) (z : ZMod q)
 
 variable (f₁ f₀ g₁ g₀ : Polynomial ℤ) (hα : 0 < α)
+
+instance : NeZero (p ^ (2 * α)) := by
+
+  sorry
+
+instance : NeZero (p ^ α) := by
+  sorry
 
 -- the denom is not equal to zero by the theorem `Ratfunc.denom_ne_zero`
 -- numerator and denominator are coprime by the theorem `Ratfunc.is_coprime_num_denom`
@@ -1535,6 +1542,3 @@ theorem even_pow_final_formula [NeZero (p^α : ℕ)] (hα : 0 < α) (f₀_at_xIs
   split_ifs
   · ring
   · ring
-
-
-

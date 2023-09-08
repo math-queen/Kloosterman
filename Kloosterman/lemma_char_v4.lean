@@ -82,7 +82,7 @@ theorem MulChar_zero : χ' χ 0 = 1 := by
 
 -- feel like there's something in the mathlib for this
 theorem MulChar_additive_pow (n : ℕ) :
-    (χ' χ z) ^ n = (χ' χ (n * z)) := by
+    (χ' χ z) ^ n = χ' χ (n * z) := by
   induction' n with n ihn
   · norm_num
     exact Eq.symm (MulChar_zero χ)

@@ -589,11 +589,12 @@ lemma rationalFunc_unit (x₀ : ℤ) (f₁_at_xIsUnit : IsUnit ((f₁.eval x₀ 
 /- note to myself
 Figure out when and how to state the assumption rationalFunc_isunit at the start of this document
 -/ 
-lemma rationalFunc_inv_cancel (rationalFunc_isunit : IsUnit (rationalFunc (f₁) (f₀) (y) (p^(2*α)) : ZMod (p^(2*α)))):
+lemma rationalFunc_inv_cancel (f₁_at_yIsUnit : IsUnit ((f₁.eval y : ℤ) : ZMod (p^(2*α)))) (f₀_at_yIsUnit : IsUnit ((f₀.eval y : ℤ) : ZMod (p ^ (2 * α)))) :
     (rationalFunc f₁ f₀ y (p^(2*α)) : ZMod (p^(2*α))) * (rationalFunc (f₁) (f₀) (y) (p^(2*α)) : ZMod (p^(2*α)))⁻¹ = 1 := by
+  have rationalFunc_isunit := rationalFunc_unit f₁ f₀ y f₁_at_yIsUnit f₀_at_yIsUnit
   exact ZMod.mul_inv_of_unit (rationalFunc f₁ f₀ y (p ^ (2 * α))) rationalFunc_isunit
 
-lemma MulChar_in_y_and_z (f₀_at_xIsUnit : IsUnit ((f₀.eval x : ℤ) : ZMod (p ^ (2 * α)))) (rationalFunc_at_y_isunit : IsUnit (rationalFunc f₁ f₀ y (p ^ (2 * α)) : ZMod (p ^ (2 * α)))) 
+lemma MulChar_in_y_and_z (f₀_at_xIsUnit : IsUnit ((f₀.eval x : ℤ) : ZMod (p ^ (2 * α)))) (f₁_at_yIsUnit : IsUnit ((f₁.eval y : ℤ) : ZMod (p^(2*α)))) (f₀_at_yIsUnit : IsUnit ((f₀.eval y : ℤ) : ZMod (p ^ (2 * α))))
     (H₁ : (taylor y f₁).support.Nonempty) (H₀ : (taylor y f₀).support.Nonempty) (support_le_H₁ : (taylor y f₁).support.max' H₁ > 0) (support_le_H₀ : (taylor y f₀).support.max' H₀ > 0) :
     χ (rationalFunc (f₁) (f₀) (x) (p^(2*α))) = χ (rationalFunc (f₁) (f₀) (y) (p^(2*α))) 
     * χ (1 + (rationalFunc_deriv (f₁) (f₀) (y) (p^(2*α))) * (rationalFunc (f₁) (f₀) (y) (p^(2*α)) : ZMod (p^(2*α)))⁻¹ * z * (p^α : ℕ)) := by
@@ -607,7 +608,7 @@ lemma MulChar_in_y_and_z (f₀_at_xIsUnit : IsUnit ((f₀.eval x : ℤ) : ZMod (
   rw [← mul_assoc (rationalFunc (f₁) (f₀) (y) (p^(2*α))) (rationalFunc_deriv (f₁) (f₀) (y) (p^(2*α))) ((rationalFunc (f₁) (f₀) (y) (p^(2*α)) : ZMod (p^(2*α)))⁻¹)]
   rw [mul_comm (rationalFunc (f₁) (f₀) (y) (p^(2*α))) (rationalFunc_deriv (f₁) (f₀) (y) (p^(2*α)))]
   rw [mul_assoc (rationalFunc_deriv (f₁) (f₀) (y) (p^(2*α))) (rationalFunc (f₁) (f₀) (y) (p^(2*α))) (rationalFunc (f₁) (f₀) (y) (p^(2*α)) : ZMod (p^(2*α)))⁻¹]
-  rw [rationalFunc_inv_cancel (p := p) (α := α) f₁ f₀ y rationalFunc_at_y_isunit]
+  rw [rationalFunc_inv_cancel (p := p) (α := α) f₁ f₀ y f₁_at_yIsUnit f₀_at_yIsUnit]
   rw [rationalFunc_eq_ZMod hα x y z h f₁ f₀ H₁ H₀ support_le_H₁ support_le_H₀ f₀_at_xIsUnit]
   ring
 
@@ -1373,7 +1374,7 @@ lemma MulChar_ZMod_twoPow_coe_onePow (z : ZMod (p^(2*α) : ℕ)) :
 
 /- previous version -/
 set_option maxHeartbeats 250000 in
-lemma double_sum_in_deriv_and_exp (f₀_at_xIsUnit : ∀(x : ℤ), IsUnit ((f₀.eval x : ℤ) : ZMod (p^(2*α)))) (rationalFunc_at_y_isunit : ∀(y : ℤ), IsUnit (rationalFunc (f₁) (f₀) (y) (p^(2*α)) : ZMod (p^(2*α))))
+lemma double_sum_in_deriv_and_exp (f₀_at_xIsUnit : ∀(x : ℤ), IsUnit ((f₀.eval x : ℤ) : ZMod (p^(2*α)))) (f₁_at_yIsUnit : ∀(y : ℤ), IsUnit ((f₁.eval y : ℤ) : ZMod (p^(2*α)))) (f₀_at_yIsUnit : ∀(y : ℤ), IsUnit ((f₀.eval y : ℤ) : ZMod (p ^ (2 * α))))
     (H₁Forf₁ : ∀(y : ℤ), (taylor y f₁).support.Nonempty) (H₀Forf₀ : ∀(y : ℤ), (taylor y f₀).support.Nonempty) (support_le_H₁Forf₁ : ∀(y : ℤ), (taylor y f₁).support.max' (H₁Forf₁ y) > 0) (support_le_H₀Forf₀ : ∀(y : ℤ), (taylor y f₀).support.max' (H₀Forf₀ y) > 0) 
     (g₀_at_xIsUnit : ∀(y : ℤ), IsUnit ((g₀.eval y : ℤ) : ZMod (p^(2*α)))) (H₁Forg₁ : ∀(y : ℤ), (taylor y g₁).support.Nonempty) (H₀Forg₀ : ∀(y : ℤ), (taylor y g₀).support.Nonempty) (support_le_H₁Forg₁ : ∀(y : ℤ), (taylor y g₁).support.max' (H₁Forg₁ y) > 0) (support_le_H₀Forg₀ : ∀(y : ℤ), (taylor y g₀).support.max' (H₀Forg₀ y) > 0) :
   ∑ y : (ZMod (p ^ α))ˣ, ∑ z : ZMod (p ^ α), χ (rationalFunc f₁ f₀ (↑↑y + ↑z * ↑(p ^ α)) (p ^ (2 * α))) * ψ (rationalFunc g₁ g₀ (↑↑y + ↑z * ↑(p ^ α)) (p ^ (2 * α))) 
@@ -1384,7 +1385,7 @@ lemma double_sum_in_deriv_and_exp (f₀_at_xIsUnit : ∀(x : ℤ), IsUnit ((f₀
     apply congr_arg
     funext z
     -- if I let MulChar_in_y_and_z eat all of its variables, times out
-    rw [MulChar_in_y_and_z χ f₁ f₀ hα (((y : ZMod (p^α)) : ℤ) + (z : ℤ) * (p ^ α : ℤ)) ((y : ZMod (p^α)) : ℤ) z rfl (f₀_at_xIsUnit (↑↑y + ↑z * ↑(p ^ α))) (rationalFunc_at_y_isunit ↑↑y)]
+    rw [MulChar_in_y_and_z χ f₁ f₀ hα (((y : ZMod (p^α)) : ℤ) + (z : ℤ) * (p ^ α : ℤ)) ((y : ZMod (p^α)) : ℤ) z rfl (f₀_at_xIsUnit (↑↑y + ↑z * ↑(p ^ α))) (f₁_at_yIsUnit ↑↑y) (f₀_at_yIsUnit ↑↑y)] 
     · rw [AddChar_in_y_and_z ψ g₁ g₀ hα (((y : ZMod (p^α)) : ℤ) + (z : ℤ) * (p ^ α : ℤ)) ((y : ZMod (p^α)) : ℤ) z rfl (g₀_at_xIsUnit (↑↑y + ↑z * ↑(p ^ α)))]
       · rw [(AddChar_eq_exp_a_spec g₁ g₀ hα ψ).right]
         rw [← MulChar_ZMod_twoPow_coe_onePow χ (rationalFunc_deriv f₁ f₀ (↑↑y) (p ^ (2 * α)) * (rationalFunc f₁ f₀ (↑↑y) (p ^ (2 * α)))⁻¹ * (z : ZMod (p^(2*α))))]
@@ -1408,14 +1409,14 @@ lemma double_sum_in_deriv_and_exp (f₀_at_xIsUnit : ∀(x : ℤ), IsUnit ((f₀
 
 ### NEED TO PROVE
 -/
-theorem double_sum_in_deriv_and_exp_after_rearrang (f₀_at_xIsUnit : ∀(x : ℤ), IsUnit ((f₀.eval x : ℤ) : ZMod (p^(2*α)))) (rationalFunc_at_y_isunit : ∀(y : ℤ), IsUnit (rationalFunc (f₁) (f₀) (y) (p^(2*α)) : ZMod (p^(2*α))))
+theorem double_sum_in_deriv_and_exp_after_rearrang (f₀_at_xIsUnit : ∀(x : ℤ), IsUnit ((f₀.eval x : ℤ) : ZMod (p^(2*α)))) (f₁_at_yIsUnit : ∀(y : ℤ), IsUnit ((f₁.eval y : ℤ) : ZMod (p^(2*α)))) (f₀_at_yIsUnit : ∀(y : ℤ), IsUnit ((f₀.eval y : ℤ) : ZMod (p ^ (2 * α))))
     (H₁Forf₁ : ∀(y : ℤ), (taylor y f₁).support.Nonempty) (H₀Forf₀ : ∀(y : ℤ), (taylor y f₀).support.Nonempty) (support_le_H₁Forf₁ : ∀(y : ℤ), (taylor y f₁).support.max' (H₁Forf₁ y) > 0) (support_le_H₀Forf₀ : ∀(y : ℤ), (taylor y f₀).support.max' (H₀Forf₀ y) > 0) 
     (g₀_at_xIsUnit : ∀(y : ℤ), IsUnit ((g₀.eval y : ℤ) : ZMod (p^(2*α)))) (H₁Forg₁ : ∀(y : ℤ), (taylor y g₁).support.Nonempty) (H₀Forg₀ : ∀(y : ℤ), (taylor y g₀).support.Nonempty) (support_le_H₁Forg₁ : ∀(y : ℤ), (taylor y g₁).support.max' (H₁Forg₁ y) > 0) (support_le_H₀Forg₀ : ∀(y : ℤ), (taylor y g₀).support.max' (H₀Forg₀ y) > 0) :
   ∑ y : (ZMod (p ^ α))ˣ, ∑ z : ZMod (p ^ α), χ (rationalFunc f₁ f₀ (↑↑y + ↑z * ↑(p ^ α)) (p ^ (2 * α))) * ψ (rationalFunc g₁ g₀ (↑↑y + ↑z * ↑(p ^ α)) (p ^ (2 * α))) 
     = ∑ y : (ZMod (p ^ α))ˣ, χ (rationalFunc f₁ f₀ y (p ^ (2 * α))) * ψ (rationalFunc (g₁) (g₀) (y) (p^(2*α))) 
     * ∑ z : ZMod (p ^ α), eZMod (p^α : ℕ) ((hFunc χ f₁ f₀ g₁ g₀ hα ψ y (p ^ (2 * α))) * z) := by
     -- eZMod (p^α : ℕ) ((AddChar_eq_exp_a z ψ hp g₁ g₀ y) * ((rationalFunc_deriv (g₁) (g₀) (y) (p^(2*α))) * z))
-    rw [double_sum_in_deriv_and_exp χ f₁ f₀ g₁ g₀ hα ψ f₀_at_xIsUnit rationalFunc_at_y_isunit H₁Forf₁ H₀Forf₀ support_le_H₁Forf₁ support_le_H₀Forf₀ g₀_at_xIsUnit H₁Forg₁ H₀Forg₀ support_le_H₁Forg₁ support_le_H₀Forg₀]
+    rw [double_sum_in_deriv_and_exp χ f₁ f₀ g₁ g₀ hα ψ f₀_at_xIsUnit f₁_at_yIsUnit f₀_at_yIsUnit H₁Forf₁ H₀Forf₀ support_le_H₁Forf₁ support_le_H₀Forf₀ g₀_at_xIsUnit H₁Forg₁ H₀Forg₀ support_le_H₁Forg₁ support_le_H₀Forg₀]
     apply congr_arg
     funext y
     rw [Finset.mul_sum]
@@ -1541,7 +1542,7 @@ By the theorem `Finset.sum_empty` the sum equals zero when h (y) ≡ 0 [ZMOD p^�
 -/
 -- (hFunc z₁ χ ψ f₁ f₀ g₁ g₀ x y x₀ (p^α) hp)
 -- (h : x = y + z * (p^α : ℕ))
-theorem even_pow_final_formula (f₀_at_xIsUnit : ∀(x : ℤ), IsUnit ((f₀.eval x : ℤ) : ZMod (p^(2*α)))) (rationalFunc_at_y_isunit : ∀(y : ℤ), IsUnit (rationalFunc (f₁) (f₀) (y) (p^(2*α)) : ZMod (p^(2*α))))
+theorem even_pow_final_formula (f₀_at_xIsUnit : ∀(x : ℤ), IsUnit ((f₀.eval x : ℤ) : ZMod (p^(2*α)))) (f₁_at_yIsUnit : ∀(y : ℤ), IsUnit ((f₁.eval y : ℤ) : ZMod (p^(2*α)))) (f₀_at_yIsUnit : ∀(y : ℤ), IsUnit ((f₀.eval y : ℤ) : ZMod (p ^ (2 * α))))
     (H₁Forf₁ : ∀(y : ℤ), (taylor y f₁).support.Nonempty) (H₀Forf₀ : ∀(y : ℤ), (taylor y f₀).support.Nonempty) (support_le_H₁Forf₁ : ∀(y : ℤ), (taylor y f₁).support.max' (H₁Forf₁ y) > 0) (support_le_H₀Forf₀ : ∀(y : ℤ), (taylor y f₀).support.max' (H₀Forf₀ y) > 0) 
     (g₀_at_xIsUnit : ∀(y : ℤ), IsUnit ((g₀.eval y : ℤ) : ZMod (p^(2*α)))) (H₁Forg₁ : ∀(y : ℤ), (taylor y g₁).support.Nonempty) (H₀Forg₀ : ∀(y : ℤ), (taylor y g₀).support.Nonempty) (support_le_H₁Forg₁ : ∀(y : ℤ), (taylor y g₁).support.max' (H₁Forg₁ y) > 0) (support_le_H₀Forg₀ : ∀(y : ℤ), (taylor y g₀).support.max' (H₀Forg₀ y) > 0) :
     CharSum χ ψ f₁ f₀ g₁ g₀ (p^(2*α)) = (p^α : ℕ) * (∑ r in ((Finset.univ : Finset (ZMod (p^α))ˣ).filter (fun r => sol_hFunc χ f₁ f₀ g₁ g₀ hα ψ r (p ^ (2 * α)))), 
@@ -1550,7 +1551,7 @@ theorem even_pow_final_formula (f₀_at_xIsUnit : ∀(x : ℤ), IsUnit ((f₀.ev
   simp only [ZMod.cast_id', id_eq]
   rw [Sum_into_two_sums_v2 hα (fun n => χ n) (fun n => ψ n) (fun n => rationalFunc f₁ f₀ n (p^(2*α))) (fun n => rationalFunc g₁ g₀ n (p^(2*α)))] 
   -- rw [MulChar_in_y_and_z z χ f₁ f₀ (((y : ZMod (p^α)) : ℤ) + (z : ℤ) * (p ^ α : ℤ)) ((y : ZMod (p^α)) : ℤ)]
-  rw [double_sum_in_deriv_and_exp_after_rearrang χ f₁ f₀ g₁ g₀ hα ψ f₀_at_xIsUnit rationalFunc_at_y_isunit H₁Forf₁ H₀Forf₀ support_le_H₁Forf₁ support_le_H₀Forf₀ g₀_at_xIsUnit H₁Forg₁ H₀Forg₀ support_le_H₁Forg₁ support_le_H₀Forg₀]
+  rw [double_sum_in_deriv_and_exp_after_rearrang χ f₁ f₀ g₁ g₀ hα ψ f₀_at_xIsUnit f₁_at_yIsUnit f₀_at_yIsUnit H₁Forf₁ H₀Forf₀ support_le_H₁Forf₁ support_le_H₀Forf₀ g₀_at_xIsUnit H₁Forg₁ H₀Forg₀ support_le_H₁Forg₁ support_le_H₀Forg₀]
   rw [Finset.sum_filter]
   rw [Finset.mul_sum]
   apply congr_arg

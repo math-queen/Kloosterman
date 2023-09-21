@@ -17,7 +17,7 @@ We provide the formalisation of the following main results in this repository :
    $$\psi (x) = e(\frac{ax}{q}) \qquad \chi (1 + z p^\alpha) = e(\frac{bz}{p^\alpha})$$
    for some $ z \in (\mathbb{Z}/p^{\alpha} \mathbb{Z}) $
 
-following the proof outlined in the book Analytic Number Theory, Iwaniec and Kowalksi. 
+following the proof outlined in p 320 - 322 of the book Analytic Number Theory, Iwaniec and Kowalksi. 
 
 By choosing the appropriate form of for the rational functions $f$ and $g$, we can specialise the formula above into the one for Kloosterman sum and derive a formula for the Kloosterman sum 
 

@@ -6,7 +6,7 @@ We provide the formalisation of the following main results in this repository :
 2. The proof for the formula generic character sum
 $ 1 = 1 $
 
-$$ \sum_{x \in (\mathbb{Z}/p^{\alpha} \mathbb{Z})^* } \chi (f (x)) \psi (g (x)) = p^{\alpha}\sum_{{y \in (\mathbb{Z}/p^{\alpha} \mathbb{Z})^*}, \, h(y) \equiv 0 (\mathrm{mod} \, p^{\alpha}) } \chi{(f(y))} \psi{(g(y))} $$
+$$ \sum_{x \in (\mathbb{Z}/p^{\alpha} \mathbb{Z})^* } \chi (f (x)) \psi (g (x)) = p^{\alpha}\sum_{{y \in (\mathbb{Z}/p^{\alpha} \mathbb{Z})^*}, \; h(y) \equiv 0 (\mathrm{mod} \, p^{\alpha}) } \chi{(f(y))} \psi{(g(y))} $$
 
 for multiplicative character $\chi$ and additive character $\psi$ for the even case when the g
 

@@ -10,7 +10,7 @@ $$ \sum_{x \in (\mathbb{Z}/p^{\alpha} \mathbb{Z})^* } \chi (f (x)) \psi (g (x)) 
 
 
 
-$$ {\sideset{}{^*}\sum}_{x(\mathrm{mod} \, q)} \chi (f (x)) \psi (g (x)) = $$
+$$ {\sideset{}{^*}\sum}_{x(\mathrm{mod} \, q)} \chi (f (x)) \psi (g (x)) = 1 $$
 for multiplicative character $\chi$ and additive character $\psi$ for the even case when the g
 
 following the proof outlined in the book Analytic Number Theory, Iwaniec and Kowalksi. 

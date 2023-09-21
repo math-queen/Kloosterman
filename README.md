@@ -4,8 +4,9 @@ This is the Mary Lister McCammon Fellowship for summer 2023, supervised by Prof.
 We provide the formalisation of the following main results in this repository : 
 1. The definition of Kloosterman sum and its related elementary lemmas
 2. The proof for the formula generic character sum
-3. $ \mathbb{Z} = 1 $
-ahhh
+3. $ \sum_{x(\mathrm{mod} \, q)} $
+
+
 $$ \sum_{(\mathbb{Z}/q \mathbb{Z})^*} \chi (f (x)) \psi (g (x)) =  $$
 
 

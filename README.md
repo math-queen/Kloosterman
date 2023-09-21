@@ -4,11 +4,11 @@ This is the Mary Lister McCammon Fellowship for summer 2023, supervised by Prof.
 We provide the formalisation of the following main results in this repository : 
 1. The definition of Kloosterman sum and its related elementary lemmas
 2. The proof for the formula generic character sum
+$$ \sum _ {(\mathbb{Z}/q \mathbb{Z})^*} \chi (f (x)) \psi (g (x)) =  $$
 $$ {\sideset{}{^*}\sum}_{x(\mathrm{mod} \, q)} \chi (f (x)) \psi (g (x)) = $$
 for multiplicative character $\chi$ and additive character $\psi$ for the even case when the g
 
 following the proof outlined in the book Analytic Number Theory, Iwaniec and Kowalksi. 
-
 
 By choosing the appropriate form of for the rational functions $f$ and $g$, we can specialise the formula above into the one for Kloosterman sum and derive a formula for the Kloosterman sum 
 

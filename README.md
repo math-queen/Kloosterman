@@ -7,12 +7,11 @@ We provide the formalisation of the following main results in this repository :
    
    Let $q = p^{2\alpha}$ with $\alpha \geq 1$. Then we have
 
-
    $$\sum_{x \in (\mathbb{Z}/p^{\alpha} \mathbb{Z})^* } \chi (f (x)) \psi (g (x)) = p^{\alpha}\sum_{{y \in (\mathbb{Z}/p^{\alpha} \mathbb{Z})^*}, \ h(y) \equiv 0 (\mathrm{mod} \ p^{\alpha}) } \chi{(f(y))} \psi{(g(y))}$$
 
    where $h(y)$ is the rational function given by
 
-   $$ h(y) = ag'(y) + b \frac{f'}{f}(y) $$
+   $$h(y) = ag'(y) + b \frac{f'}{f}(y)$$
 
    with the integers $a, b$ determined by the following equations
    

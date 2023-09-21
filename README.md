@@ -8,9 +8,6 @@ $ 1 = 1 $
 
 $$ \sum_{x \in (\mathbb{Z}/p^{\alpha} \mathbb{Z})^* } \chi (f (x)) \psi (g (x)) = p^{\alpha}\sum_{\substack {y \in (\mathbb{Z}/p^{\alpha} \mathbb{Z})^* \\ h(y) \equiv 0 (\mathrm{mod} \, p^{\alpha}) }} \chi{(f(y))} \psi{(g(y))} $$
 
-
-
-$$ {\sideset{}{^*}\sum}_{x(\mathrm{mod} \, q)} \chi (f (x)) \psi (g (x)) = 1 $$
 for multiplicative character $\chi$ and additive character $\psi$ for the even case when the g
 
 following the proof outlined in the book Analytic Number Theory, Iwaniec and Kowalksi. 

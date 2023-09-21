@@ -6,7 +6,7 @@ We provide the formalisation of the following main results in this repository :
 2. The proof for the formula generic character sum
 $ 1 = 1 $
 
-$$ \sum_{(\mathbb{Z}/q \mathbb{Z})^*} \chi (f (x)) \psi (g (x)) =  $$
+$$ \sum_{(\mathbb{Z}/q \mathbb{Z})^*} \chi (f (x)) \psi (g (x)) = p^{\alpha}\psum_{\substack{y (\mathrm{mod} \, p^{\alpha}) \\ h(y) \equiv 0 (\mathrm{mod} \, p^{\alpha}) }} \chi{(f(y))} \psi{(g(y))} $$
 
 
 

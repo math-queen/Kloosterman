@@ -16,7 +16,8 @@ We provide the formalisation of the following main results in this repository :
    with the integers $a, b$ determined by the following equations
    
    $$\psi (x) = e(\frac{ax}{q}) \qquad \chi (1 + z p^\alpha) = e(\frac{bz}{p^\alpha})$$
-   for some $ z \in (\mathbb{Z}/p^{\alpha} \mathbb{Z}) $
+   for some
+   $ z \in (\mathbb{Z}/p^{\alpha} \mathbb{Z}) $
 
 following the proof outlined in p 320 - 322 of the book Analytic Number Theory, Iwaniec and Kowalksi. 
 

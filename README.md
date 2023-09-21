@@ -1,6 +1,6 @@
 # Formalisation of Kloosterman sums and its related Character sums
 
-I formalised the definition of Kloosterman sum and its related properties as a part of the project funded by the Mary Lister McCammon Fellowship for summer 2023, supervised by Prof. Kevin Buzzard. I provide the formalisation of the following main results in this repository : 
+I formalised the definition of Kloosterman sum and its related properties as a part of the project funded by the Mary Lister McCammon Fellowship for the summer of 2023, supervised by Prof. Kevin Buzzard. I provide the formalisation of the following main results in this repository : 
 1. The definition of Kloosterman sum and its related elementary lemmas
 2. The proof of the formula for the generic character sum :
    

@@ -1,7 +1,7 @@
 # Formalisation of Kloosterman sums and its related Character sums
 
 This is the Mary Lister McCammon Fellowship for summer 2023, supervised by Prof. Kevin Buzzard. 
-We provide the formalisation of the following main results in this repository : 
+I provide the formalisation of the following main results in this repository : 
 1. The definition of Kloosterman sum and its related elementary lemmas
 2. The proof of the formula for the generic character sum :
    
@@ -18,7 +18,7 @@ We provide the formalisation of the following main results in this repository :
    $$\psi (x) = e(\frac{ax}{q}) \qquad \chi (1 + z p^\alpha) = e(\frac{bz}{p^\alpha})$$
    where $e (n) := \exp (2 \pi i n)$ for some $z \in (\mathbb{Z}/p^{\alpha} \mathbb{Z})$.
 
-   mostly following the proof outlined in p 320 - 322 of the book Analytic Number Theory, Iwaniec and Kowalski. 
+   for the special case when the denominator and numerator of the function $f$ and $g$ can be expressed as non-constant polynomial and coprime to $p$. 
 
 The formula above can be specialised into the one for Kloosterman sum by choosing the appropriate rational functions $f$ and $g$ (see p 322, Iwaniec and Kowalski). Please note that to derive the expression for Kloosterman sum from the above formula, we also need the formalisation for the case when both the denominator and numerator of the function $f$ can be expressed as constant function (which should be easier to be accomplished than the already formalised case when both the denominator and numerator are non-constant polynomial). 
 

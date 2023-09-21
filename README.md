@@ -12,7 +12,7 @@ We provide the formalisation of the following main results in this repository :
    where $h(y)$ is the rational function given by
 
    $$h(y) = ag'(y) + b \frac{f'}{f}(y)$$
-
+   
    with the integers $a, b$ determined by the following equations
    
    $$\psi (x) = e(\frac{ax}{q}) \qquad \chi (1 + z p^\alpha) = e(\frac{bz}{p^\alpha})$$

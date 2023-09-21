@@ -3,7 +3,7 @@
 This is the Mary Lister McCammon Fellowship for summer 2023, supervised by Prof. Kevin Buzzard. 
 We provide the formalisation of the following main results in this repository : 
 1. The definition of Kloosterman sum and its related elementary lemmas
-2. The proof for the formula formula generic character sum that allows us to exp:
+2. The proof of the formula for the generic character sum :
    
    Let $q = p^{2\alpha}$ with $\alpha \geq 1$. Then we have
    

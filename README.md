@@ -4,19 +4,16 @@ This is the Mary Lister McCammon Fellowship for summer 2023, supervised by Prof.
 We provide the formalisation of the following main results in this repository : 
 1. The definition of Kloosterman sum and its related elementary lemmas
 2. The proof for the formula generic character sum
+   Let $q = p^{2\alpha}$ with $\alpha \geq 1$. Then we have
 
-Let $q = p^{2\alpha}$ with $\alpha \geq 1$. Then we have
+   $$ \sum_{x \in (\mathbb{Z}/p^{\alpha} \mathbb{Z})^* } \chi (f (x)) \psi (g (x)) = p^{\alpha}\sum_{{y \in (\mathbb{Z}/p^{\alpha} \mathbb{Z})^*}, \ h(y) \equiv 0 (\mathrm{mod} \ p^{\alpha}) } \chi{(f(y))} \psi{(g(y))} $$
 
-$$ \sum_{x \in (\mathbb{Z}/p^{\alpha} \mathbb{Z})^* } \chi (f (x)) \psi (g (x)) = p^{\alpha}\sum_{{y \in (\mathbb{Z}/p^{\alpha} \mathbb{Z})^*}, \ h(y) \equiv 0 (\mathrm{mod} \ p^{\alpha}) } \chi{(f(y))} \psi{(g(y))} $$
+   where $h(y)$ is the rational function given by
+   $$ h(y) = ag'(y) + b \frac{f'}{f}(y) $$
 
-where $h(y)$ is the rational function given by
-$$ h(y) = ag'(y) + b \frac{f'}{f}(y) $$
-
-with the integers $a, b$ determined by the following equations
-$$\psi (x) = e(\frac{ax}{q}) \qquad \chi (1 + z p^\alpha) = e(\frac{bz}{p^\alpha})$$
-for some $ z \in (\mathbb{Z}/p^{\alpha} \mathbb{Z}) $
-
-for multiplicative character $\chi$ and additive character $\psi$ for the even case when the g
+   with the integers $a, b$ determined by the following equations
+   $$\psi (x) = e(\frac{ax}{q}) \qquad \chi (1 + z p^\alpha) = e(\frac{bz}{p^\alpha})$$
+   for some $ z \in (\mathbb{Z}/p^{\alpha} \mathbb{Z}) $
 
 following the proof outlined in the book Analytic Number Theory, Iwaniec and Kowalksi. 
 

@@ -3,7 +3,7 @@
 I formalised the definition of Kloosterman sum and its related properties as a part of the project funded by the Mary Lister McCammon Fellowship for the summer of 2023, supervised by Prof. Kevin Buzzard. I provide the formalisation of the following main results in this repository : 
 1. The definition of Kloosterman sum and its related elementary lemmas
 2. The proof of the formula for the generic character sum :
-
+   
    Consider the character sum of the form $$\sum_{x \in (\mathbb{Z}/p^{\alpha} \mathbb{Z})^* } \chi (f (x)) \psi (g (x))$ where $\chi : \zqringstar \rightarrow \mathbb{C}^* $ and $\psi : \zqring \rightarrow \mathbb{C}^*$ is multiplicative and additive character respectively.
    
    Let $q = p^{2\alpha}$ with $\alpha \geq 1$. Then we have

@@ -6,7 +6,7 @@ I formalised the definition of Kloosterman sum and its related properties as a p
    
    Consider the character sum of the form
    $$\sum_{x \in (\mathbb{Z}/q \mathbb{Z})^* } \chi (f (x)) \psi (g (x))$$
-   where $\chi$ and $\psi$ are multiplicative and additive character respectively from $(\mathbb{Z}/q \mathbb{Z})^*$ to the units of complex. 
+   where $\chi$ and $\psi$ are multiplicative and additive character respectively from $(\mathbb{Z}/q \mathbb{Z})^*$ to the units of complex and $f$ and $g$ are rational functions.
    
    Let $q = p^{2\alpha}$ with $\alpha \geq 1$. Then we have
 

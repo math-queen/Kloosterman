@@ -4,7 +4,9 @@ I formalised the definition of Kloosterman sum and its related properties as a p
 1. The definition of Kloosterman sum and its related elementary lemmas
 2. The proof of the formula for the generic character sum :
    
-   Consider the character sum of the form $$\sum_{x \in (\mathbb{Z}/p^{\alpha} \mathbb{Z})^* } \chi (f (x)) \psi (g (x))$ where $\chi : \zqringstar \rightarrow \mathbb{C}^* $ and $\psi : \zqring \rightarrow \mathbb{C}^*$ is multiplicative and additive character respectively.
+   Consider the character sum of the form
+   $$\sum_{x \in (\mathbb{Z}/q \mathbb{Z})^* } \chi (f (x)) \psi (g (x))$$
+   where $\chi : (\mathbb{Z}/q \mathbb{Z})^* \rightarrow \mathbb{C}^* $ and $\psi : (\mathbb{Z}/q \mathbb{Z})^* \rightarrow \mathbb{C}^*$ are multiplicative and additive character respectively.
    
    Let $q = p^{2\alpha}$ with $\alpha \geq 1$. Then we have
 

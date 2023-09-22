@@ -3,17 +3,16 @@ import Mathlib.Data.Polynomial.Basic
 import Mathlib.Data.Polynomial.Taylor
 import Mathlib.Data.Int.Basic
 import Mathlib.Algebra.BigOperators.Basic
+import Mathlib.Deprecated.Subgroup
 import Kloosterman.lemma_char_v4
 import Kloosterman.def2_v3_kloosterman
-import Kloosterman.rationalfunc_v3
-import Mathlib.Deprecated.Subgroup
+import Kloosterman.rationalfunc_v4
 
 set_option autoImplicit false
 
 open Complex BigOperators Set IsGroupHom
 
 noncomputable section
-
 
 -- open IsSubmonoid IsSubgroup
 
@@ -65,15 +64,14 @@ lemma ZModptwoPow_to_ZModpPow_isUnit (r : (ZMod (p ^ (2 * α + 1)))ˣ) : IsUnit 
   
   rw [← ZMod.int_cast_zmod_cast (r : ZMod (p ^ (2 * α + 1)))]
   rw [ZMod.cast_int_cast pPow_dvd_pTwoaddOnePow]
-  
+  sorry
 
 
-
+  /-
   rw [isUnit_iff_exists_inv] at *
   cases' this with b hb
   use (b : ZMod (p ^ α))
-  
-  sorry
+  -/
 
 lemma unit_exists_for_isUnit (r : (ZMod (p ^ (2 * α + 1)))ˣ) : ∃(n : (ZMod (p ^ α))ˣ), n = (r : ZMod (p ^ α)) := by 
   have := ZModptwoPow_to_ZModpPow_isUnit r 
@@ -464,8 +462,6 @@ theorem chi_eq_eZMod_for_subgroup :
 theorem bruh :
     ∃(r₀ : Subgroup_G (p := p) (α := α)), z = element_of_G_eq_z hα r₀ := by
   unfold element_of_G_eq_z
-  use z
-  
   sorry
 
 theorem chi_eq_eZMod_for_zmod : 

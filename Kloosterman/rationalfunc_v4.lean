@@ -5,6 +5,7 @@ import Mathlib.Data.Int.Basic
 import Mathlib.Algebra.BigOperators.Basic
 import Kloosterman.lemma_char_v4
 import Kloosterman.def2_v3_kloosterman
+import Kloosterman.const_func
 
 set_option autoImplicit false
 
@@ -17,6 +18,14 @@ We have to keep the variables `x` `y` as `ℤ` for the following theorems w.r.t 
 When dealing with Kloosterman sum, we will have to coerce the variable we're summing over rom ZMod q or (ZMod q)ˣ to ℤ 
 Keep in mind 
 when using the theorems for the taylor series and Kloosterman sum at the same time 
+-/
+
+/-!
+## Main declarations
+
+* theorem `even_pow_final_formula` : Lemma 12.2 from Chapter 12, Iwaniec and Kowalski for the special case when 
+  the denominator and numerator of the rational functions f and g can be expressed as non-constant polynomial coprime to p
+
 -/
 
 variable {p α : ℕ} (χ : MulChar (ZMod (p ^ (2 * α))) ℂ) (ψ : AddChar (ZMod (p ^ (2 * α))) ℂ)
@@ -39,8 +48,6 @@ instance : NeZero (p ^ (2 * α)) := by exact NeZero.pow
 /- 
 we need `.eval` because we're trying to evaluate the function f at specific value x
 -/
-
-section rationalFunc
 
 def rationalFunc (p₁ p₀ : Polynomial ℤ) (x₀ : ℤ) (q : ℕ) : ZMod q :=
   let r := p₀.eval x₀
@@ -650,7 +657,7 @@ theorem MulChar_eq_exp :
   { rw [ZMod.val_mul (↑b) c]
     exact Int.mod_modEq ((b : ZMod (p^α)).val * ZMod.val c) (p ^ α) }
 
-  have new_NeZero : p^α ≠ 0 := by exact NeZero.ne (p ^ α)
+  -- have new_NeZero : p^α ≠ 0 := by exact NeZero.ne (p ^ α)
   have val_b : (b : ZMod (p^α)).val ≡ b [ZMOD (p ^ α)]
   { simp only [Nat.cast_pow, ZMod.nat_cast_val]
     norm_cast
@@ -670,7 +677,7 @@ theorem MulChar_eq_exp :
   · exact congr_val
   done
 
-/- the natural number b whose existence is guaranteed by MulChar_eq_exp -/
+/-- the natural number b whose existence is guaranteed by MulChar_eq_exp -/
 def MulChar_eq_exp_b : ℕ := (MulChar_eq_exp χ f₁ f₀).choose
 
 -- variable (x y : ℤ)
@@ -690,16 +697,13 @@ lemma AddChar_in_y_and_z (g₀_at_xIsUnit : IsUnit ((g₀.eval x : ℤ) : ZMod (
   rw [rationalFunc_eq_ZMod hα x y z h g₁ g₀ H₁ H₀ support_le_H₁ support_le_H₀ g₀_at_xIsUnit]
   simp
 
-end rationalFunc
-
 variable (ψ : AddChar (ZMod (p ^ (2 * α))) ℂ)
-
-open AddChar
 
 lemma AddChar_one_pow (z₀ : ZMod (p^(2*α))) : (ψ 1) ^ z₀.val = ψ z₀ := by
   rw [← mulShift_spec' ψ z₀.val 1, mulShift_apply]
   simp only [ZMod.nat_cast_val, ZMod.cast_id', id_eq, mul_one]
 
+/- previous version 
 lemma AddChar_isUnit : IsUnit (ψ 1) := by
   apply Ne.isUnit
   by_contra hψ
@@ -711,7 +715,22 @@ lemma AddChar_isUnit : IsUnit (ψ 1) := by
   have pPow_ne_zero : p ^ (2 * α) ≠ 0 := by exact NeZero.ne (p ^ (2 * α))
   rw [zero_pow' (p ^ (2 * α)) pPow_ne_zero] at hψ_pow
   aesop
+-/
+
+lemma AddChar_isUnit : IsUnit (ψ 1) := by
+  apply Ne.isUnit
+  by_contra hψ
+  have hψ_pow := complex_pow (p ^ (2 * α)) hψ
+  rw [← mulShift_spec'] at hψ_pow
+  rw [mulShift_apply] at hψ_pow
+  simp only [CharP.cast_eq_zero, mul_one, map_zero_one, ne_eq, CanonicallyOrderedCommSemiring.mul_pos, true_and] at hψ_pow 
+  -- zero_pow'
+  have pPow_ne_zero : p ^ (2 * α) ≠ 0 := by exact NeZero.ne (p ^ (2 * α))
+  rw [zero_pow' (p ^ (2 * α)) pPow_ne_zero] at hψ_pow
+  rename_i ψ_1 -- I previously used aesop instead, but aesop used the unnecessary variables as well
+  simp_all only [one_ne_zero]
   -- tauto
+
 
 /- previous version (weaker version without `(z₀ : ZMod (p^(2*α)))`)
 -- Complex.mem_rootsOfUnity
@@ -817,7 +836,7 @@ theorem AddChar_eq_exp :
     exact Int.mod_modEq ((a : ZMod (p^(2*α))).val * ZMod.val c) (p ^ (2*α)) }
 
   -- follows from the theorem `NeZero_pPow`
-  have new_NeZero : p^(2*α) ≠ 0 := by exact NeZero.ne (p^(2*α))
+  -- have new_NeZero : p^(2*α) ≠ 0 := by exact NeZero.ne (p^(2*α))
   have val_a : (a : ZMod (p^(2*α))).val ≡ a [ZMOD (p^(2*α))]
   { simp only [Nat.cast_pow, ZMod.nat_cast_val]
     norm_cast
@@ -1176,7 +1195,7 @@ lemma ZMod_int_cast_mul (q : ℕ) (a b : ZMod q) [NeZero q] (h : (a * b : ℤ) <
 /- for the second goal of the second goal for the theorem `sum_bijection` -/
 lemma NatcoeZModLarger_eq_ZModSmaller_to_val {a b n : ℕ} (h : b ≤ a) [NeZero b] : 
     ((n : ZMod b) : ZMod a).val = (n : ZMod b).val := by
-  have NeZeroFora := NeZeroForSmaller h -- although shadowed, we need this variable (Note to kevin : wait until the letters change from blue to grey after you comment this line out)
+  -- have NeZeroFora := NeZeroForSmaller h -- although shadowed, we need this variable (Note to kevin : wait until the letters change from blue to grey after you comment this line out)
   exact valZModLarger_eq_ZModSmaller' h ↑n
 
 /- for the second goal of the second goal for the theorem `sum_bijection` -/

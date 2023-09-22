@@ -206,11 +206,3 @@ theorem theorem1 (a : ℤ) (b : ℤ) (q : ℕ) (b₁ : ℤ) (b₂ : ℤ) (q₁ :
 -/
 
 -- proper Iwaniec and Kowalski proof starts from here
-
-/- Questions to Kevin
-1. Whenever I change the name for the theorems, is it possible to make a corresponding change in the remaining bits of the code?
-2. 
-
-
-
--/

@@ -3,8 +3,6 @@ import Mathlib.Data.Polynomial.Basic
 import Mathlib.Data.Polynomial.Taylor
 import Mathlib.Data.Int.Basic
 import Mathlib.Algebra.BigOperators.Basic
-import Kloosterman.lemma_char_v4
-import Kloosterman.def2_v3_kloosterman
 
 set_option autoImplicit false
 
